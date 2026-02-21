@@ -1,9 +1,9 @@
-# たまごっちWebアプリ 要件・仕様定義書
+# そだてるっちWebアプリ 要件・仕様定義書
 
 ## 1. プロジェクト概要
 
 ### 1.1 目的
-「たまごっち」を模したキャラクター育成Webアプリケーションを開発する。ユーザーはかわいいキャラクターに毎日お世話をし、成長・進化を見守る。育成の仕方によって進化先が変化し、成人後は結婚・産卵・世代交代というサイクルを繰り返す。
+「そだてるっち」を模したキャラクター育成Webアプリケーションを開発する。ユーザーはかわいいキャラクターに毎日お世話をし、成長・進化を見守る。育成の仕方によって進化先が変化し、成人後は結婚・産卵・世代交代というサイクルを繰り返す。
 
 ### 1.2 コンセプト
 - **手軽さ**: 1日数分のお世話で楽しめる
@@ -95,6 +95,7 @@
 │  🕐 時刻   世代: 3代目   💰 100G │  ← ヘッダー
 ├─────────────────────────────────┤
 │                                 │
+│        「たまみ」(名前表示)       │
 │      ┌───────────────┐          │
 │      │               │          │
 │      │  キャラクター   │          │  ← メイン表示エリア
@@ -128,6 +129,8 @@
 
 **進化タイミング**: 各ステージの滞在期間終了時に、蓄積されたお世話データに基づいて次のステージのキャラクターが決定される。
 
+**名前付け**: たまごが孵化してベビー期に入る際、ユーザーにキャラクターの名前入力を求める。名前は1〜30文字で自由に設定可能（例:「たまみ」「そらくん」等）。未入力の場合は種族名がデフォルト名として設定される。名前はゲーム画面上部に常時表示される。
+
 ### 4.2 パラメータ一覧
 
 | パラメータ | 範囲 | 自然変化 | 説明 |
@@ -152,7 +155,7 @@
 | 掃除 | 清潔度+30 | なし | うんちが出現した時に実行 |
 | 治療 | 病気を治す | なし | 病気フラグがtrue時のみ実行可能 |
 | しつけ | しつけ度+10 | 2時間 | わがまま行動時に実行すると効果2倍 |
-| 電気を消す | 就寝させる（体力回復） | - | 22:00〜7:00は自動就寝。手動も可 |
+| 電気を消す | 就寝させる（体力回復） | - | 24:00〜6:00は自動就寝。手動も可 |
 
 ### 4.4 ミニゲーム（遊ぶアクション詳細）
 
@@ -261,7 +264,7 @@ type Gene = {
 - お世話ミスとしてカウントはする
 
 #### 4.7.3 睡眠システム
-- 22:00〜7:00はキャラクターが自動就寝
+- 24:00〜6:00はキャラクターが自動就寝
 - 就寝中はパラメータの自然減少が半減
 - 就寝中は体力が1時間ごとに+10回復
 - 就寝中にお世話アクションは実行不可
@@ -294,7 +297,7 @@ users
 characters (現在育成中のキャラクター)
 ├── id (UUID, PK)
 ├── user_id (FK → users.id)
-├── name (キャラクターのニックネーム)
+├── name (キャラクターのニックネーム。1〜30文字。ユーザーが自由に命名可能)
 ├── species_id (FK → species.id)
 ├── stage (ベビー/キッズ/ヤング/アダルト)
 ├── gender (male/female)
@@ -477,7 +480,7 @@ Supabaseクライアントを通じたデータアクセスを基本とし、複
 A cute round baby virtual pet character, chibi style, simple design,
 small round body with tiny arms and legs, big sparkling eyes, light blue body color,
 happy expression, pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Japanese virtual pet aesthetic, Tamagotchi-inspired.
+transparent PNG style, kawaii Japanese virtual pet aesthetic, virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -487,7 +490,7 @@ A cute round baby virtual pet character, chibi style, simple design,
 small round body with tiny arms and legs, big sparkling eyes with eyelashes,
 light pink body color, happy expression, small ribbon on head,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Japanese virtual pet aesthetic, Tamagotchi-inspired.
+transparent PNG style, kawaii Japanese virtual pet aesthetic, virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -498,7 +501,7 @@ Size: 256x256px
 A cute small round virtual pet character, toddler stage, chibi style,
 perfectly round white body, small dot eyes, blushing cheeks, tiny feet,
 simple and adorable design, pixel art inspired but smooth lines,
-white background, transparent PNG style, kawaii Tamagotchi-inspired.
+white background, transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -508,7 +511,7 @@ A cute small virtual pet character, toddler stage, chibi style,
 round body with prominent lips/beak, orange-yellow body color,
 playful expression, small wings instead of arms,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -518,7 +521,7 @@ A cute small virtual pet character, toddler stage, chibi style,
 round body with a mohawk-like hair tuft on top, light green body color,
 mischievous expression, small arms and legs,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -528,7 +531,7 @@ A cute small virtual pet character, toddler stage, chibi style,
 round body with polka-dot pattern, light purple body color,
 gentle expression, water-drop shaped body,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -540,7 +543,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 round body slightly taller than wide, white body with blue accents,
 confident expression, small arms with visible hands,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -550,7 +553,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 oval body with a duck-like bill, orange body color,
 energetic expression, small wing-arms spread out,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -560,7 +563,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 round body with tall spiky mohawk hair, green body color,
 rebellious but cute expression, wearing a tiny scarf,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -570,7 +573,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 water-drop shaped body, blue-purple gradient body color,
 calm serene expression, flowing water-like appendages,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -580,7 +583,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 star-shaped body, golden yellow body color,
 cheerful sparkling expression, small star-shaped hands,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -590,7 +593,7 @@ A cute medium-sized virtual pet character, teenager stage, chibi style,
 cloud-shaped body, pastel rainbow gradient body color,
 dreamy expression, soft fluffy texture appearance,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -602,7 +605,7 @@ A cute adult virtual pet character, fully grown stage, chibi style,
 round body with pointed ears, black and yellow body color,
 intelligent kind expression, wearing tiny glasses,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, Mametchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired, Mametchi-inspired.
 Size: 256x256px
 ```
 
@@ -612,7 +615,7 @@ A cute adult virtual pet character, fully grown stage, chibi style,
 round body with large curly hair/antenna, pink body color,
 fashionable cute expression, big sparkling eyes with long eyelashes,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, Memetchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired, Memetchi-inspired.
 Size: 256x256px
 ```
 
@@ -622,7 +625,7 @@ A cute adult virtual pet character, fully grown stage, chibi style,
 large round body with prominent duck lips, green body color,
 happy relaxed expression, slightly chubby, holding a rice ball,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, Kuchipatchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired, Kuchipatchi-inspired.
 Size: 256x256px
 ```
 
@@ -632,7 +635,7 @@ A cute adult virtual pet character, fully grown stage, chibi style,
 sleek round body with sharp cool eyes, dark blue body color,
 confident cool expression, small cape or scarf accessory,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -642,7 +645,7 @@ A cute adult virtual pet character, fully grown stage, chibi style,
 round body with flower petals around the head, pastel pink and white body color,
 gentle sweet expression, leaf-shaped hands,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, Flowertchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired, Flowertchi-inspired.
 Size: 256x256px
 ```
 
@@ -652,7 +655,7 @@ A cute but scruffy adult virtual pet character, fully grown stage, chibi style,
 round body with stubble/beard shadow, brownish gray body color,
 tired lazy expression, small bald spot on head, holding a newspaper,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, Oyajitchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired, Oyajitchi-inspired.
 Size: 256x256px
 ```
 
@@ -662,7 +665,7 @@ A cute beautiful adult virtual pet character, fully grown stage, chibi style,
 elegant round body, shimmering rainbow gradient body color,
 majestic graceful expression, tiny crown on head, sparkle effects,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, rare character.
+transparent PNG style, kawaii virtual pet game inspired, rare character.
 Size: 256x256px
 ```
 
@@ -672,7 +675,7 @@ A cute beautiful adult virtual pet character, fully grown stage, chibi style,
 round body covered in star/constellation pattern, deep navy blue body color,
 mysterious gentle expression, glowing star eyes, tiny shooting star trail,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, rare character.
+transparent PNG style, kawaii virtual pet game inspired, rare character.
 Size: 256x256px
 ```
 
@@ -682,7 +685,7 @@ A cute majestic adult virtual pet character, fully grown stage, chibi style,
 round body made of pure golden light, radiant white and gold body color,
 divine peaceful expression, angel-like tiny wings, halo above head,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, legendary character.
+transparent PNG style, kawaii virtual pet game inspired, legendary character.
 Size: 256x256px
 ```
 
@@ -692,7 +695,7 @@ A cute mysterious adult virtual pet character, fully grown stage, chibi style,
 round body made of shadowy dark energy, deep purple and black body color,
 mysterious cool expression, tiny bat-like wings, crescent moon motif,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired, legendary character.
+transparent PNG style, kawaii virtual pet game inspired, legendary character.
 Size: 256x256px
 ```
 
@@ -708,7 +711,7 @@ Bottom-left: sleeping (eyes closed, peaceful, small "zzz" text),
 Bottom-right: sick (pale color, sweat drop, dizzy swirl eyes).
 Same character design as the base character, consistent style,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 512x512px (each expression 256x256px)
 ```
 
@@ -719,7 +722,7 @@ Size: 512x512px (each expression 256x256px)
 A cute simple egg, white with colorful small spots/pattern,
 slightly glowing, sitting on soft surface, warm feeling,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -728,7 +731,7 @@ Size: 256x256px
 A cute egg with cracks forming on the surface, white with colorful spots,
 light shining through the cracks, exciting feeling,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -737,7 +740,7 @@ Size: 256x256px
 A cute egg hatching open, shell pieces flying outward,
 bright light and sparkles coming from inside, joyful magical moment,
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -749,7 +752,7 @@ A cute adult virtual pet character designed as a marriage partner NPC,
 chibi style, round body, [PERSONALITY_DESC], [COLOR] body color,
 [EXPRESSION] expression, [ACCESSORY],
 pixel art inspired but smooth lines, white background,
-transparent PNG style, kawaii Tamagotchi-inspired.
+transparent PNG style, kawaii virtual pet game inspired.
 Size: 256x256px
 ```
 
@@ -903,7 +906,7 @@ surrounded by hearts, stars, and sparkles,
 large cute egg in the center background,
 text space at the top for game title,
 pastel rainbow gradient background,
-kawaii Japanese virtual pet game aesthetic, Tamagotchi-inspired,
+kawaii Japanese virtual pet game aesthetic, virtual pet game inspired,
 vibrant and inviting illustration, flat design style.
 Size: 1200x630px
 ```
@@ -935,17 +938,17 @@ Size: 1200x630px
 
 ---
 
-## 12. 未決定事項・確認事項
+## 12. 決定事項一覧
 
-以下はユーザーの判断が必要な事項:
+以下の事項は確定済み:
 
-| # | 項目 | 質問 | デフォルト案 |
-|---|------|------|------------|
-| 1 | キャラクターの名前付け | ユーザーがキャラクターに名前を付けられるか？ | はい（任意。デフォルト名あり） |
-| 2 | 課金要素 | ゲーム内通貨や課金要素は必要か？ | なし（完全無料） |
-| 3 | SNS共有 | キャラクターのスクリーンショット共有機能は必要か？ | Phase3で検討 |
-| 4 | 音声/BGM | 効果音やBGMは必要か？ | Phase3で検討（フリー素材利用） |
-| 5 | 多言語対応 | 日本語のみか、英語対応も必要か？ | 日本語のみ |
-| 6 | パスワードリセット | パスワードリセット機能は必要か？ | はい（Supabase標準機能利用） |
-| 7 | ゲストプレイ | ログインなしでの体験プレイは可能か？ | なし（要ログイン） |
-| 8 | データ削除 | アカウントやデータの削除機能は必要か？ | はい（GDPR対応） |
+| # | 項目 | 決定内容 |
+|---|------|---------|
+| 1 | キャラクターの名前付け | **可能**（1〜30文字、任意。未入力時は種族名をデフォルト名として設定） |
+| 2 | 課金要素 | **なし**（完全無料） |
+| 3 | SNS共有 | **Phase3で検討** |
+| 4 | 音声/BGM | **Phase3で検討**（フリー素材利用） |
+| 5 | 多言語対応 | **日本語のみ** |
+| 6 | パスワードリセット | **あり**（Supabase標準機能を利用） |
+| 7 | ゲストプレイ | **なし**（要ログイン） |
+| 8 | データ削除 | **あり**（GDPR対応。アカウント・全育成データの削除機能を実装） |

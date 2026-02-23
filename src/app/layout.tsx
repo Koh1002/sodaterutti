@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "かわいいキャラクターを育てて、進化させて、世代をつないでいく育成Webゲーム",
   icons: {
     icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 

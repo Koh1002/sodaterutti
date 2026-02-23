@@ -43,7 +43,16 @@ export const COOLDOWNS = {
   snack: 60 * 60 * 1000,      // 1時間
   play: 60 * 60 * 1000,       // 1時間
   discipline: 2 * 60 * 60 * 1000, // 2時間
+  walk: 30 * 60 * 1000,       // 30分
 } as const;
+
+/** ミニゲーム個別クールダウン（ミリ秒） */
+export const MINI_GAME_COOLDOWNS: Record<string, number> = {
+  janken: 30 * 60 * 1000,     // 30分
+  memory: 30 * 60 * 1000,     // 30分
+  rhythm: 20 * 60 * 1000,     // 20分
+  quiz: 20 * 60 * 1000,       // 20分
+};
 
 /** うんち発生確率（1時間あたり） */
 export const POOP_CHANCE_PER_HOUR = 0.15;
@@ -314,6 +323,44 @@ export function disciplineAction(character: Character): ActionResult {
       last_disciplined_at: new Date().toISOString(),
     },
   };
+}
+
+/** 散歩 */
+export function walkAction(character: Character): ActionResult {
+  if (character.is_sleeping) return { success: false, message: '寝ている間はおさんぽに行けません' };
+  if (character.is_sick) return { success: false, message: '病気の時はおさんぽに行けません' };
+  if (character.stamina < 15) return { success: false, message: '疲れすぎています...休ませてあげて' };
+
+  if (character.last_walked_at) {
+    const cooldownEnd = new Date(character.last_walked_at).getTime() + COOLDOWNS.walk;
+    if (Date.now() < cooldownEnd) {
+      const remaining = Math.ceil((cooldownEnd - Date.now()) / 60000);
+      return { success: false, message: `あと${remaining}分待ってね` };
+    }
+  }
+
+  // 実際の効果はwalk-eventsで計算し、storeで適用する
+  return {
+    success: true,
+    message: 'おさんぽに出発！',
+    updates: {
+      last_walked_at: new Date().toISOString(),
+      walk_count: (character.walk_count || 0) + 1,
+    },
+  };
+}
+
+/** ミニゲームのクールダウンチェック */
+export function checkMiniGameCooldown(character: Character, gameType: string): { canPlay: boolean; remaining: number } {
+  const cooldowns = (character.mini_game_cooldowns || {}) as Record<string, string>;
+  const lastPlayed = cooldowns[gameType];
+  if (!lastPlayed) return { canPlay: true, remaining: 0 };
+
+  const cooldownMs = MINI_GAME_COOLDOWNS[gameType] || COOLDOWNS.play;
+  const cooldownEnd = new Date(lastPlayed).getTime() + cooldownMs;
+  const remaining = Math.max(0, Math.ceil((cooldownEnd - Date.now()) / 60000));
+
+  return { canPlay: remaining === 0, remaining };
 }
 
 /** 就寝/起床 */

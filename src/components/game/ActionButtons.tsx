@@ -3,11 +3,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/stores/game-store';
+import { checkMiniGameCooldown } from '@/lib/game-logic';
+import { MiniGameMemory } from './MiniGameMemory';
+import { MiniGameRhythm } from './MiniGameRhythm';
+import { MiniGameQuiz } from './MiniGameQuiz';
 
-export function ActionButtons() {
-  const { character, feed, giveSnack, clean, cure, discipline, toggleSleep } = useGameStore();
+interface ActionButtonsProps {
+  onWalk: () => void;
+}
+
+export function ActionButtons({ onWalk }: ActionButtonsProps) {
+  const { character, feed, giveSnack, clean, cure, discipline, toggleSleep, playMiniGame, setMessage } = useGameStore();
   const [showFoodMenu, setShowFoodMenu] = useState(false);
-  const [showMiniGame, setShowMiniGame] = useState(false);
+  const [showGameMenu, setShowGameMenu] = useState(false);
+  const [activeGame, setActiveGame] = useState<string | null>(null);
 
   if (!character) return null;
 
@@ -15,14 +24,20 @@ export function ActionButtons() {
     {
       label: 'ごはん',
       icon: '🍚',
-      onClick: () => setShowFoodMenu(!showFoodMenu),
+      onClick: () => { setShowFoodMenu(!showFoodMenu); setShowGameMenu(false); },
       disabled: character.is_sleeping,
     },
     {
       label: 'あそぶ',
       icon: '🎮',
-      onClick: () => setShowMiniGame(true),
+      onClick: () => { setShowGameMenu(!showGameMenu); setShowFoodMenu(false); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 10,
+    },
+    {
+      label: 'おさんぽ',
+      icon: '👟',
+      onClick: () => { setShowFoodMenu(false); setShowGameMenu(false); onWalk(); },
+      disabled: character.is_sleeping || character.is_sick || character.stamina < 15,
     },
     {
       label: 'そうじ',
@@ -50,10 +65,32 @@ export function ActionButtons() {
     },
   ];
 
+  const miniGames = [
+    { key: 'janken', icon: '✊', label: 'じゃんけん' },
+    { key: 'memory', icon: '🃏', label: '神経衰弱' },
+    { key: 'rhythm', icon: '🎵', label: 'リズム' },
+    { key: 'quiz', icon: '❓', label: 'クイズ' },
+  ];
+
+  const handleStartGame = (gameKey: string) => {
+    const { canPlay, remaining } = checkMiniGameCooldown(character, gameKey);
+    if (!canPlay) {
+      setMessage(`あと${remaining}分待ってね`);
+      return;
+    }
+    setShowGameMenu(false);
+    setActiveGame(gameKey);
+  };
+
+  const handleGameComplete = (gameKey: string, score: number, extra?: { fastClear?: boolean }) => {
+    playMiniGame(gameKey, score, extra);
+    // activeGameはonCloseで閉じる
+  };
+
   return (
     <div className="space-y-3">
       {/* メインアクションボタン */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {actions.map((action) => (
           <motion.button
             key={action.label}
@@ -61,15 +98,15 @@ export function ActionButtons() {
             onClick={action.onClick}
             disabled={action.disabled}
             className={`
-              flex flex-col items-center justify-center p-3 rounded-xl
-              font-medium text-sm transition-all
+              flex flex-col items-center justify-center p-2 rounded-xl
+              font-medium text-xs transition-all
               ${action.disabled
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-white hover:bg-purple-50 text-gray-700 shadow-sm hover:shadow active:shadow-inner border border-gray-200'
               }
             `}
           >
-            <span className="text-2xl mb-1">{action.icon}</span>
+            <span className="text-xl mb-0.5">{action.icon}</span>
             <span>{action.label}</span>
           </motion.button>
         ))}
@@ -118,10 +155,77 @@ export function ActionButtons() {
         )}
       </AnimatePresence>
 
-      {/* ミニゲーム（じゃんけん） */}
+      {/* ミニゲーム選択メニュー */}
       <AnimatePresence>
-        {showMiniGame && (
-          <MiniGameJanken onClose={() => setShowMiniGame(false)} />
+        {showGameMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-white rounded-xl shadow-md p-3 border border-gray-100"
+          >
+            <p className="text-xs text-gray-500 mb-2 text-center">なにであそぶ？</p>
+            <div className="grid grid-cols-4 gap-2">
+              {miniGames.map((game) => {
+                const { canPlay } = checkMiniGameCooldown(character, game.key);
+                return (
+                  <button
+                    key={game.key}
+                    onClick={() => handleStartGame(game.key)}
+                    className={`flex flex-col items-center p-2 rounded-lg transition ${
+                      canPlay ? 'hover:bg-purple-50' : 'opacity-40 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="text-2xl">{game.icon}</span>
+                    <span className="text-xs text-gray-600">{game.label}</span>
+                    {!canPlay && (
+                      <span className="text-[10px] text-gray-400">CD中</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ミニゲーム: じゃんけん */}
+      <AnimatePresence>
+        {activeGame === 'janken' && (
+          <MiniGameJanken
+            onClose={() => setActiveGame(null)}
+            onComplete={(score) => handleGameComplete('janken', score, { fastClear: score >= 3 })}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ミニゲーム: 神経衰弱 */}
+      <AnimatePresence>
+        {activeGame === 'memory' && (
+          <MiniGameMemory
+            onClose={() => setActiveGame(null)}
+            onComplete={(score, fastClear) => handleGameComplete('memory', score, { fastClear })}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ミニゲーム: リズム */}
+      <AnimatePresence>
+        {activeGame === 'rhythm' && (
+          <MiniGameRhythm
+            onClose={() => setActiveGame(null)}
+            onComplete={(score) => handleGameComplete('rhythm', score)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ミニゲーム: クイズ */}
+      <AnimatePresence>
+        {activeGame === 'quiz' && (
+          <MiniGameQuiz
+            onClose={() => setActiveGame(null)}
+            onComplete={(score) => handleGameComplete('quiz', score)}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -129,13 +233,12 @@ export function ActionButtons() {
 }
 
 // =========================================
-// じゃんけんミニゲーム
+// じゃんけんミニゲーム（既存）
 // =========================================
 
 type Hand = 'rock' | 'scissors' | 'paper';
 
-function MiniGameJanken({ onClose }: { onClose: () => void }) {
-  const { play } = useGameStore();
+function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComplete: (score: number) => void }) {
   const [round, setRound] = useState(0);
   const [wins, setWins] = useState(0);
   const [playerHand, setPlayerHand] = useState<Hand | null>(null);
@@ -183,7 +286,7 @@ function MiniGameJanken({ onClose }: { onClose: () => void }) {
 
     if (newRound >= 3) {
       setGameOver(true);
-      play(newWins);
+      onComplete(newWins);
     }
   };
 
@@ -204,7 +307,6 @@ function MiniGameJanken({ onClose }: { onClose: () => void }) {
           {gameOver ? '結果発表！' : `${round + 1}/3 ラウンド`}
         </p>
 
-        {/* 結果表示 */}
         {playerHand && cpuHand && (
           <div className="flex items-center justify-center gap-6 mb-4">
             <div className="text-center">
@@ -247,7 +349,7 @@ function MiniGameJanken({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="text-center space-y-3">
             <p className="text-2xl font-bold">
-              {wins >= 2 ? '🎉 大成功！' : wins >= 1 ? '✨ 成功！' : '😅 残念...'}
+              {wins >= 3 ? '👑 パーフェクト！' : wins >= 2 ? '🎉 大成功！' : wins >= 1 ? '✨ 成功！' : '😅 残念...'}
             </p>
             <p className="text-sm text-gray-500">{wins}勝 / 3回</p>
             <button
@@ -259,7 +361,6 @@ function MiniGameJanken({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* 戦績 */}
         <div className="mt-4 flex justify-center gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <div

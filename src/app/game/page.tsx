@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/stores/game-store';
 import { GameHeader } from '@/components/game/GameHeader';
 import { CharacterDisplay } from '@/components/game/CharacterDisplay';
@@ -8,11 +9,19 @@ import { StatusBar } from '@/components/game/StatusBar';
 import { ActionButtons } from '@/components/game/ActionButtons';
 import { MessageToast } from '@/components/game/MessageToast';
 import { NewEggScreen } from '@/components/game/NewEggScreen';
+import { MumbleDisplay } from '@/components/game/MumbleDisplay';
+import { WalkScreen } from '@/components/game/WalkScreen';
+import { DailyMissionPanel } from '@/components/game/DailyMissionPanel';
+import { AchievementPanel } from '@/components/game/AchievementPanel';
 import { getBackgroundPlaceholder } from '@/lib/character-images';
+import { walkAction } from '@/lib/game-logic';
 
 export default function GamePage() {
-  const { character, species, isLoading, loadCharacter, recalculateStatus } = useGameStore();
+  const { character, species, isLoading, loadCharacter, recalculateStatus, setMessage } = useGameStore();
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
+  const [showWalk, setShowWalk] = useState(false);
+  const [showMissions, setShowMissions] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   useEffect(() => {
     loadCharacter();
@@ -39,22 +48,38 @@ export default function GamePage() {
     );
   }
 
-  // キャラクターが居ない場合は新しいたまごスクリーン
   if (!character) {
     return <NewEggScreen />;
   }
 
   const bgGradient = getBackgroundPlaceholder(currentHour);
 
+  const handleWalk = () => {
+    const result = walkAction(character);
+    if (!result.success) {
+      setMessage(result.message);
+      return;
+    }
+    setShowWalk(true);
+  };
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ background: bgGradient }}
     >
-      <GameHeader />
+      <GameHeader
+        onOpenMissions={() => setShowMissions(true)}
+        onOpenAchievements={() => setShowAchievements(true)}
+      />
       <MessageToast />
 
       <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full p-4 pb-6">
+        {/* つぶやき */}
+        <div className="w-full flex justify-center mb-2 min-h-[44px]">
+          <MumbleDisplay />
+        </div>
+
         {/* キャラクター表示エリア */}
         <div className="flex-1 flex items-center justify-center w-full">
           <CharacterDisplay character={character} species={species} />
@@ -62,30 +87,10 @@ export default function GamePage() {
 
         {/* ステータスバー */}
         <div className="w-full space-y-2 mb-4 bg-white/60 backdrop-blur-sm rounded-xl p-4">
-          <StatusBar
-            label="おなか"
-            value={character.hunger}
-            color="bg-orange-400"
-            icon="🍔"
-          />
-          <StatusBar
-            label="きもち"
-            value={character.happiness}
-            color="bg-pink-400"
-            icon="💕"
-          />
-          <StatusBar
-            label="たいりょく"
-            value={character.stamina}
-            color="bg-green-400"
-            icon="💪"
-          />
-          <StatusBar
-            label="きれいさ"
-            value={character.cleanliness}
-            color="bg-blue-400"
-            icon="✨"
-          />
+          <StatusBar label="おなか" value={character.hunger} color="bg-orange-400" icon="🍔" />
+          <StatusBar label="きもち" value={character.happiness} color="bg-pink-400" icon="💕" />
+          <StatusBar label="たいりょく" value={character.stamina} color="bg-green-400" icon="💪" />
+          <StatusBar label="きれいさ" value={character.cleanliness} color="bg-blue-400" icon="✨" />
           <div className="flex justify-between text-xs text-gray-500 pt-1">
             <span>体重: {character.weight}g</span>
             <span>しつけ: {character.discipline}/100</span>
@@ -95,9 +100,20 @@ export default function GamePage() {
 
         {/* アクションボタン */}
         <div className="w-full">
-          <ActionButtons />
+          <ActionButtons onWalk={handleWalk} />
         </div>
       </main>
+
+      {/* おさんぽ画面 */}
+      <AnimatePresence>
+        {showWalk && <WalkScreen onClose={() => setShowWalk(false)} />}
+      </AnimatePresence>
+
+      {/* デイリーミッション */}
+      <DailyMissionPanel isOpen={showMissions} onClose={() => setShowMissions(false)} />
+
+      {/* 実績パネル */}
+      <AchievementPanel isOpen={showAchievements} onClose={() => setShowAchievements(false)} />
     </div>
   );
 }

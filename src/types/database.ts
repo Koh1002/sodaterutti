@@ -57,6 +57,9 @@ export interface Database {
           is_alive: boolean;
           created_at: string;
           updated_at: string;
+          last_walked_at: string | null;
+          mini_game_cooldowns: Json;
+          walk_count: number;
         };
         Insert: {
           id?: string;
@@ -89,6 +92,9 @@ export interface Database {
           is_sleeping?: boolean;
           stage_started_at?: string;
           is_alive?: boolean;
+          last_walked_at?: string | null;
+          mini_game_cooldowns?: Json;
+          walk_count?: number;
         };
         Update: {
           name?: string;
@@ -116,6 +122,9 @@ export interface Database {
           is_sleeping?: boolean;
           stage_started_at?: string;
           is_alive?: boolean;
+          last_walked_at?: string | null;
+          mini_game_cooldowns?: Json;
+          walk_count?: number;
         };
         Relationships: [
           {
@@ -313,6 +322,108 @@ export interface Database {
             columns: ["user_id"];
             isOneToOne: true;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      daily_missions: {
+        Row: {
+          id: string;
+          user_id: string;
+          mission_type: string;
+          mission_label: string;
+          target_count: number;
+          current_count: number;
+          is_completed: boolean;
+          reward_type: string;
+          reward_amount: number;
+          mission_date: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          mission_type: string;
+          mission_label: string;
+          target_count?: number;
+          current_count?: number;
+          is_completed?: boolean;
+          reward_type?: string;
+          reward_amount?: number;
+          mission_date?: string;
+        };
+        Update: {
+          current_count?: number;
+          is_completed?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "daily_missions_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      achievements: {
+        Row: {
+          id: string;
+          key: string;
+          name: string;
+          description: string;
+          icon: string;
+          category: string;
+          condition_type: string;
+          condition_value: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          name: string;
+          description: string;
+          icon?: string;
+          category?: string;
+          condition_type: string;
+          condition_value?: number;
+        };
+        Update: {
+          name?: string;
+          description?: string;
+          icon?: string;
+        };
+        Relationships: [];
+      };
+      user_achievements: {
+        Row: {
+          id: string;
+          user_id: string;
+          achievement_id: string;
+          unlocked_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          achievement_id: string;
+          unlocked_at?: string;
+        };
+        Update: {
+          unlocked_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey";
+            columns: ["achievement_id"];
+            isOneToOne: false;
+            referencedRelation: "achievements";
             referencedColumns: ["id"];
           }
         ];

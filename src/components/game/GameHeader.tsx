@@ -5,8 +5,13 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useGameStore } from '@/stores/game-store';
 
-export function GameHeader() {
-  const { character } = useGameStore();
+interface GameHeaderProps {
+  onOpenMissions: () => void;
+  onOpenAchievements: () => void;
+}
+
+export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderProps) {
+  const { character, dailyMissions } = useGameStore();
   const router = useRouter();
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -27,6 +32,9 @@ export function GameHeader() {
     minute: '2-digit',
   });
 
+  const activeMissions = dailyMissions.filter(m => !m.is_completed).length;
+  const completedMissions = dailyMissions.filter(m => m.is_completed).length;
+
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 px-4 py-2">
       <div className="max-w-lg mx-auto flex items-center justify-between">
@@ -42,24 +50,46 @@ export function GameHeader() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onOpenMissions}
+            className="relative text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+          >
+            📋
+            {completedMissions > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                {completedMissions}
+              </span>
+            )}
+            {activeMissions > 0 && completedMissions === 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-400 text-white text-[10px] rounded-full flex items-center justify-center">
+                {activeMissions}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={onOpenAchievements}
+            className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+          >
+            🏆
+          </button>
           <button
             onClick={() => router.push('/game/encyclopedia')}
             className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
           >
-            📖 図鑑
+            📖
           </button>
           <button
             onClick={() => router.push('/game/family-tree')}
             className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
           >
-            🌳 家系図
+            🌳
           </button>
           <button
             onClick={handleLogout}
             className="text-xs px-2 py-1 rounded-lg hover:bg-red-50 text-gray-400 transition"
           >
-            ログアウト
+            ↩
           </button>
         </div>
       </div>

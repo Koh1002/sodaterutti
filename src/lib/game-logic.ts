@@ -438,6 +438,84 @@ export function calculateCareScore(character: Character, baseWeight: number): Ca
 }
 
 // =========================================
+// 進化判定
+// =========================================
+
+export interface EvolutionRule {
+  id: string;
+  from_species_id: string;
+  to_species_id: string;
+  condition: Record<string, number>;
+  priority: number;
+}
+
+/** 進化ルールに基づいて進化先を決定する */
+export function determineEvolution(
+  character: Character,
+  careScore: number,
+  rules: EvolutionRule[]
+): string | null {
+  const applicableRules = rules
+    .filter(r => r.from_species_id === character.species_id)
+    .sort((a, b) => b.priority - a.priority);
+
+  for (const rule of applicableRules) {
+    const cond = rule.condition;
+    let matches = true;
+
+    if (cond.min_care_score !== undefined && careScore < cond.min_care_score) matches = false;
+    if (cond.max_care_score !== undefined && careScore > cond.max_care_score) matches = false;
+    if (cond.min_discipline !== undefined && character.discipline < cond.min_discipline) matches = false;
+    if (cond.max_discipline !== undefined && character.discipline > cond.max_discipline) matches = false;
+    if (cond.min_generation !== undefined && character.generation < cond.min_generation) matches = false;
+
+    if (matches) return rule.to_species_id;
+  }
+
+  return null;
+}
+
+// =========================================
+// 死亡判定
+// =========================================
+
+export interface DeathCheckResult {
+  isDead: boolean;
+  cause: 'death_age' | 'death_sick' | null;
+}
+
+/** 死亡条件をチェックする */
+export function checkDeath(character: Character, now: Date = new Date()): DeathCheckResult {
+  // 寿命死: アダルト期到達後、結婚せず7日経過
+  if (character.stage === 'adult') {
+    const stageStarted = new Date(character.stage_started_at);
+    const daysAsAdult = (now.getTime() - stageStarted.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysAsAdult >= 7) {
+      return { isDead: true, cause: 'death_age' };
+    }
+  }
+
+  // 病気死: 病気状態で空腹度・清潔度が両方0（重篤状態）
+  if (character.is_sick && character.hunger === 0 && character.cleanliness === 0) {
+    return { isDead: true, cause: 'death_sick' };
+  }
+
+  return { isDead: false, cause: null };
+}
+
+// =========================================
+// 結婚可能判定
+// =========================================
+
+/** 結婚適齢期かどうかを判定する（アダルト期3日目以降） */
+export function canMarry(character: Character, now: Date = new Date()): boolean {
+  if (character.stage !== 'adult') return false;
+  const stageStarted = new Date(character.stage_started_at);
+  const daysAsAdult = (now.getTime() - stageStarted.getTime()) / (1000 * 60 * 60 * 24);
+  return daysAsAdult >= 3;
+}
+
+// =========================================
 // ユーティリティ
 // =========================================
 

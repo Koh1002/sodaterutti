@@ -13,11 +13,22 @@ import { MumbleDisplay } from '@/components/game/MumbleDisplay';
 import { WalkScreen } from '@/components/game/WalkScreen';
 import { DailyMissionPanel } from '@/components/game/DailyMissionPanel';
 import { AchievementPanel } from '@/components/game/AchievementPanel';
+import { EvolutionScreen } from '@/components/game/EvolutionScreen';
+import { MarriageScreen } from '@/components/game/MarriageScreen';
+import { GraveScreen } from '@/components/game/GraveScreen';
 import { getBackgroundPlaceholder } from '@/lib/character-images';
 import { walkAction } from '@/lib/game-logic';
 
 export default function GamePage() {
-  const { character, species, isLoading, loadCharacter, recalculateStatus, setMessage } = useGameStore();
+  const {
+    character, species, isLoading,
+    loadCharacter, recalculateStatus, setMessage,
+    evolutionInfo, completeEvolution,
+    marriageCandidates, showMarriage, isMarriageEligible,
+    loadMarriageCandidates, marry, dismissMarriage,
+    deathInfo, restartAfterDeath,
+  } = useGameStore();
+
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
   const [showWalk, setShowWalk] = useState(false);
   const [showMissions, setShowMissions] = useState(false);
@@ -36,6 +47,20 @@ export default function GamePage() {
     }, 60000);
     return () => clearInterval(interval);
   }, [character, recalculateStatus]);
+
+  // 死亡画面
+  if (deathInfo) {
+    return (
+      <GraveScreen
+        characterName={deathInfo.characterName}
+        species={deathInfo.species}
+        ageDays={deathInfo.ageDays}
+        generation={deathInfo.generation}
+        cause={deathInfo.cause}
+        onRestart={restartAfterDeath}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -85,6 +110,20 @@ export default function GamePage() {
           <CharacterDisplay character={character} species={species} />
         </div>
 
+        {/* 結婚適齢期の通知 */}
+        {isMarriageEligible && (
+          <div className="w-full mb-3">
+            <button
+              onClick={() => loadMarriageCandidates()}
+              className="w-full py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-xl shadow-lg hover:from-pink-500 hover:to-rose-500 transition flex items-center justify-center gap-2"
+            >
+              <span>💒</span>
+              <span>けっこんできるよ！</span>
+              <span>💕</span>
+            </button>
+          </div>
+        )}
+
         {/* ステータスバー */}
         <div className="w-full space-y-2 mb-4 bg-white/60 backdrop-blur-sm rounded-xl p-4">
           <StatusBar label="おなか" value={character.hunger} color="bg-orange-400" icon="🍔" />
@@ -114,6 +153,31 @@ export default function GamePage() {
 
       {/* 実績パネル */}
       <AchievementPanel isOpen={showAchievements} onClose={() => setShowAchievements(false)} />
+
+      {/* 進化演出 */}
+      <AnimatePresence>
+        {evolutionInfo && (
+          <EvolutionScreen
+            fromSpecies={evolutionInfo.fromSpecies}
+            toSpecies={evolutionInfo.toSpecies}
+            characterName={character.name || species?.name || '???'}
+            onComplete={completeEvolution}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 結婚画面 */}
+      <AnimatePresence>
+        {showMarriage && species && (
+          <MarriageScreen
+            characterName={character.name || species.name}
+            characterSpecies={species}
+            candidates={marriageCandidates}
+            onSelect={marry}
+            onClose={dismissMarriage}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

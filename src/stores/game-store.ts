@@ -4,6 +4,10 @@ import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
 import {
   calculateTimeElapsed,
+  calculateCareScore,
+  determineEvolution,
+  checkDeath,
+  canMarry,
   feedAction,
   snackAction,
   playAction,
@@ -13,6 +17,7 @@ import {
   sleepAction,
   walkAction,
 } from '@/lib/game-logic';
+import type { EvolutionRule } from '@/lib/game-logic';
 import { generateDailyMissions, getMatchingMissionTypes } from '@/lib/daily-missions';
 import type { Database } from '@/types/database';
 
@@ -21,6 +26,7 @@ type Species = Database['public']['Tables']['species']['Row'];
 type DailyMission = Database['public']['Tables']['daily_missions']['Row'];
 type Achievement = Database['public']['Tables']['achievements']['Row'];
 type UserAchievement = Database['public']['Tables']['user_achievements']['Row'];
+type MarriageCandidate = Database['public']['Tables']['marriage_candidates']['Row'];
 
 /** Supabase update + select の結果を Character にキャストするヘルパー */
 async function updateCharacter(
@@ -41,6 +47,23 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
+interface EvolutionInfo {
+  fromSpecies: Species;
+  toSpecies: Species;
+}
+
+interface DeathInfo {
+  species: Species;
+  cause: 'death_age' | 'death_sick';
+  ageDays: number;
+  generation: number;
+  characterName: string;
+}
+
+interface MarriageCandidateWithSpecies extends MarriageCandidate {
+  speciesName: string;
+}
+
 interface GameState {
   // データ
   character: Character | null;
@@ -52,6 +75,13 @@ interface GameState {
   dailyMissions: DailyMission[];
   allAchievements: Achievement[];
   userAchievements: UserAchievement[];
+
+  // 進化・結婚・死亡の状態
+  evolutionInfo: EvolutionInfo | null;
+  marriageCandidates: MarriageCandidateWithSpecies[];
+  showMarriage: boolean;
+  deathInfo: DeathInfo | null;
+  isMarriageEligible: boolean;
 
   // 統計（実績チェック用、セッション内カウント）
   sessionStats: {
@@ -67,8 +97,15 @@ interface GameState {
 
   // アクション
   loadCharacter: () => Promise<void>;
-  createNewEgg: (name?: string) => Promise<void>;
+  createNewEgg: (name?: string, parentGene?: Record<string, string>) => Promise<void>;
   recalculateStatus: () => Promise<void>;
+  checkEvolution: () => Promise<void>;
+  completeEvolution: () => void;
+  loadMarriageCandidates: () => Promise<void>;
+  marry: (candidateId: string) => Promise<void>;
+  dismissMarriage: () => void;
+  handleDeath: () => Promise<void>;
+  restartAfterDeath: () => void;
   feed: (foodType: 'onigiri' | 'bread' | 'cake') => Promise<void>;
   giveSnack: () => Promise<void>;
   playMiniGame: (gameType: string, score: number, extra?: { fastClear?: boolean }) => Promise<void>;
@@ -97,6 +134,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   dailyMissions: [],
   allAchievements: [],
   userAchievements: [],
+  evolutionInfo: null,
+  marriageCandidates: [],
+  showMarriage: false,
+  deathInfo: null,
+  isMarriageEligible: false,
   sessionStats: {
     feedCount: 0, cleanCount: 0, cureCount: 0,
     gamePlayCount: 0, gameWinCount: 0,
@@ -129,7 +171,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (characters) {
         const species = speciesData.find(s => s.id === characters.species_id) || null;
-        set({ character: characters, species, isLoading: false });
+        const marriageEligible = canMarry(characters);
+        set({ character: characters, species, isLoading: false, isMarriageEligible: marriageEligible });
         get().recalculateStatus();
       } else {
         set({ character: null, species: null, isLoading: false });
@@ -138,14 +181,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       // 並行してミッション・実績をロード
       get().loadDailyMissions();
       get().loadAchievements();
-      // ログインミッション進捗
       get().progressMission('login');
     } catch {
       set({ isLoading: false });
     }
   },
 
-  createNewEgg: async (name) => {
+  createNewEgg: async (name, parentGene) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -162,8 +204,15 @@ export const useGameStore = create<GameState>((set, get) => ({
       .order('generation', { ascending: false })
       .limit(1);
 
-    const histList = (history || []) as Array<{ generation: number }>;
+    const histList = (history || []) as Array<{ generation: number; id: string }>;
     const generation = histList.length > 0 ? histList[0].generation + 1 : 1;
+    const parentCharId = histList.length > 0 ? histList[0].id : null;
+
+    const gene = parentGene || {
+      bodyColor: gender === 'male' ? 'blue' : 'pink',
+      eyeType: 'round',
+      personality: 'neutral',
+    };
 
     const { data: rawNew, error } = await supabase
       .from('characters')
@@ -173,11 +222,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         species_id: babySpeciesId,
         gender: gender as 'male' | 'female',
         generation,
-        gene: {
-          bodyColor: gender === 'male' ? 'blue' : 'pink',
-          eyeType: 'round',
-          personality: 'neutral',
-        },
+        gene,
+        parent_character_id: parentCharId,
       })
       .select()
       .single();
@@ -189,7 +235,15 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const newChar = rawNew as unknown as Character;
     const species = get().allSpecies.find(s => s.id === newChar.species_id) || null;
-    set({ character: newChar, species, message: 'たまごが生まれた！' });
+    set({
+      character: newChar,
+      species,
+      message: 'たまごが生まれた！',
+      deathInfo: null,
+      evolutionInfo: null,
+      showMarriage: false,
+      isMarriageEligible: false,
+    });
   },
 
   recalculateStatus: async () => {
@@ -200,7 +254,20 @@ export const useGameStore = create<GameState>((set, get) => ({
     const updated = await updateCharacter(character.id, result.updates);
 
     if (updated) {
-      set({ character: updated });
+      const marriageEligible = canMarry(updated);
+      set({ character: updated, isMarriageEligible: marriageEligible });
+
+      // 死亡チェック
+      const deathResult = checkDeath(updated);
+      if (deathResult.isDead && deathResult.cause) {
+        get().handleDeath();
+        return;
+      }
+
+      // 進化チェック
+      if (result.shouldCheckEvolution) {
+        get().checkEvolution();
+      }
     }
 
     if (result.gotSick) {
@@ -210,6 +277,193 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else if (result.careMissOccurred) {
       set({ message: 'お世話が足りていないみたい...' });
     }
+  },
+
+  // ===== 進化 =====
+
+  checkEvolution: async () => {
+    const { character, species, allSpecies } = get();
+    if (!character || !species) return;
+    if (character.stage === 'adult') return; // アダルト期はこれ以上進化しない
+
+    const supabase = createClient();
+    const { data: rawRules } = await supabase
+      .from('evolution_rules')
+      .select('*')
+      .eq('from_species_id', character.species_id);
+
+    const rules = (rawRules || []) as EvolutionRule[];
+    if (rules.length === 0) return;
+
+    const careScore = calculateCareScore(character, species.base_weight);
+    const nextSpeciesId = determineEvolution(character, careScore.total, rules);
+    if (!nextSpeciesId) return;
+
+    const nextSpecies = allSpecies.find(s => s.id === nextSpeciesId);
+    if (!nextSpecies) return;
+
+    // 進化を実行
+    const updated = await updateCharacter(character.id, {
+      species_id: nextSpeciesId,
+      stage: nextSpecies.stage,
+      stage_started_at: new Date().toISOString(),
+      care_miss_count: 0,
+      mini_game_total_score: 0,
+      mini_game_play_count: 0,
+    });
+
+    if (updated) {
+      set({
+        evolutionInfo: { fromSpecies: species, toSpecies: nextSpecies },
+        character: updated,
+        species: nextSpecies,
+        isMarriageEligible: canMarry(updated),
+      });
+      get().checkAchievements();
+    }
+  },
+
+  completeEvolution: () => {
+    set({ evolutionInfo: null });
+  },
+
+  // ===== 結婚 =====
+
+  loadMarriageCandidates: async () => {
+    const supabase = createClient();
+    const { data: rawCandidates } = await supabase
+      .from('marriage_candidates')
+      .select('*');
+
+    const all = (rawCandidates || []) as MarriageCandidate[];
+    const { allSpecies } = get();
+
+    // ランダムに3体選択
+    const shuffled = [...all].sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 3);
+
+    const withNames: MarriageCandidateWithSpecies[] = selected.map(c => ({
+      ...c,
+      speciesName: allSpecies.find(s => s.id === c.species_id)?.name || '不明',
+    }));
+
+    set({ marriageCandidates: withNames, showMarriage: true });
+  },
+
+  marry: async (candidateId: string) => {
+    const { character, species, marriageCandidates } = get();
+    if (!character || !species) return;
+
+    const candidate = marriageCandidates.find(c => c.id === candidateId);
+    if (!candidate) return;
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // 現在のキャラクターを歴史に記録
+    await supabase.from('character_history').insert({
+      user_id: user.id,
+      name: character.name || species.name,
+      species_id: character.species_id,
+      final_stage: character.stage,
+      gender: character.gender,
+      generation: character.generation,
+      gene: character.gene,
+      parent_character_id: character.parent_character_id,
+      partner_species_id: candidate.species_id,
+      cause_of_departure: 'marriage' as const,
+      age_at_departure: character.age_days,
+      born_at: character.born_at,
+    });
+
+    // 現在のキャラクターを非活性化
+    await supabase
+      .from('characters')
+      .update({ is_alive: false })
+      .eq('id', character.id);
+
+    // 遺伝子を混合
+    const parentGene = character.gene as Record<string, string> | null;
+    const partnerGene = candidate.gene as Record<string, string> | null;
+
+    const childGene: Record<string, string> = {
+      bodyColor: Math.random() < 0.5
+        ? (parentGene?.bodyColor || 'blue')
+        : (partnerGene?.bodyColor || 'pink'),
+      eyeType: Math.random() < 0.5
+        ? (parentGene?.eyeType || 'round')
+        : (partnerGene?.eyeType || 'round'),
+      personality: Math.random() < 0.5
+        ? (parentGene?.personality || 'neutral')
+        : (partnerGene?.personality || 'neutral'),
+    };
+
+    // 突然変異（5%の確率）
+    if (Math.random() < 0.05) {
+      const colors = ['pink', 'blue', 'green', 'purple', 'gold', 'crimson'];
+      childGene.bodyColor = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    set({ showMarriage: false, marriageCandidates: [] });
+
+    // 新しいたまごを生成
+    await get().createNewEgg(undefined, childGene);
+  },
+
+  dismissMarriage: () => {
+    set({ showMarriage: false, marriageCandidates: [] });
+  },
+
+  // ===== 死亡 =====
+
+  handleDeath: async () => {
+    const { character, species } = get();
+    if (!character || !species) return;
+
+    const deathResult = checkDeath(character);
+    if (!deathResult.isDead || !deathResult.cause) return;
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // 歴史に記録
+    await supabase.from('character_history').insert({
+      user_id: user.id,
+      name: character.name || species.name,
+      species_id: character.species_id,
+      final_stage: character.stage,
+      gender: character.gender,
+      generation: character.generation,
+      gene: character.gene,
+      parent_character_id: character.parent_character_id,
+      cause_of_departure: deathResult.cause,
+      age_at_departure: character.age_days,
+      born_at: character.born_at,
+    });
+
+    // キャラクターを非活性化
+    await supabase
+      .from('characters')
+      .update({ is_alive: false })
+      .eq('id', character.id);
+
+    set({
+      deathInfo: {
+        species,
+        cause: deathResult.cause,
+        ageDays: character.age_days,
+        generation: character.generation,
+        characterName: character.name || species.name,
+      },
+      character: null,
+      species: null,
+    });
+  },
+
+  restartAfterDeath: () => {
+    set({ deathInfo: null, character: null, species: null });
   },
 
   feed: async (foodType) => {
@@ -261,7 +515,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // ミニゲーム個別クールダウンを更新
     const cooldowns = { ...((character.mini_game_cooldowns || {}) as Record<string, string>) };
     cooldowns[gameType] = new Date().toISOString();
 
@@ -373,7 +626,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // 散歩効果をパラメータに反映
     const walkUpdates: Record<string, unknown> = { ...result.updates };
     if (effects.happiness) walkUpdates.happiness = clamp(character.happiness + effects.happiness, 0, 100);
     if (effects.hunger) walkUpdates.hunger = clamp(character.hunger + effects.hunger, 0, 100);
@@ -478,7 +730,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     const mission = dailyMissions.find(m => m.id === missionId);
     if (!mission || !mission.is_completed) return;
 
-    // 報酬を適用
     const rewardKey = mission.reward_type as keyof Character;
     const currentVal = character[rewardKey];
     if (typeof currentVal !== 'number') return;
@@ -490,7 +741,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ character: updated, message: `ミッション報酬をゲット！` });
     }
 
-    // ミッションをDBから削除
     const supabase = createClient();
     await supabase.from('daily_missions').delete().eq('id', missionId);
     set({ dailyMissions: dailyMissions.filter(m => m.id !== missionId) });

@@ -111,6 +111,7 @@ interface GameState {
   playMiniGame: (gameType: string, score: number, extra?: { fastClear?: boolean }) => Promise<void>;
   clean: () => Promise<void>;
   cure: () => Promise<void>;
+  pet: () => Promise<void>;
   discipline: () => Promise<void>;
   toggleSleep: () => Promise<void>;
   walk: (effects: Record<string, number>, rareEvent: boolean) => Promise<void>;
@@ -597,6 +598,31 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (updated) {
       set({ character: updated, message: result.message });
       get().progressMission('discipline');
+    }
+  },
+
+  pet: async () => {
+    const { character } = get();
+    if (!character) return;
+    if (character.is_sleeping) {
+      set({ message: '寝ているのでそっとしておこう' });
+      return;
+    }
+    const gain = 3 + Math.floor(Math.random() * 3); // 3-5
+    const messages = [
+      'うれしそうにしている！',
+      'なでなで〜♪ ごきげん！',
+      'すりすりしてきた！',
+      'きもちよさそう〜',
+      'しっぽをふっている！',
+    ];
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const updated = await updateCharacter(character.id, {
+      happiness: clamp(character.happiness + gain, 0, 100),
+    });
+    if (updated) {
+      set({ character: updated, message: msg });
+      get().progressMission('pet');
     }
   },
 

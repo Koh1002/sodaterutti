@@ -9,7 +9,6 @@ import { StatusBar } from '@/components/game/StatusBar';
 import { ActionButtons } from '@/components/game/ActionButtons';
 import { MessageToast } from '@/components/game/MessageToast';
 import { NewEggScreen } from '@/components/game/NewEggScreen';
-import { MumbleDisplay } from '@/components/game/MumbleDisplay';
 import { WalkScreen } from '@/components/game/WalkScreen';
 import { DailyMissionPanel } from '@/components/game/DailyMissionPanel';
 import { AchievementPanel } from '@/components/game/AchievementPanel';
@@ -99,14 +98,9 @@ export default function GamePage() {
       />
       <MessageToast />
 
-      <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full p-4 pb-6">
-        {/* つぶやき */}
-        <div className="w-full flex justify-center mb-2 min-h-[44px]">
-          <MumbleDisplay />
-        </div>
-
+      <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full px-4 pt-2 pb-6">
         {/* キャラクター表示エリア */}
-        <div className="flex-1 flex items-center justify-center w-full py-2">
+        <div className="flex-1 flex items-center justify-center w-full">
           <CharacterDisplay character={character} species={species} />
         </div>
 

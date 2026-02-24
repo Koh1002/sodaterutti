@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
+import { MumbleDisplay } from './MumbleDisplay';
 import type { Database } from '@/types/database';
 
 type Character = Database['public']['Tables']['characters']['Row'];
@@ -43,16 +44,19 @@ export function CharacterDisplay({ character, species }: CharacterDisplayProps) 
 
   return (
     <div className="relative flex flex-col items-center w-full">
-      {/* 名前表示 */}
-      <div className="mb-2 text-center">
+      {/* 名前 + ステージ情報（1行にまとめてコンパクトに） */}
+      <div className="mb-1 text-center flex items-center gap-2">
         <span className="text-lg font-bold text-purple-700">
           {character.name || species?.name || '???'}
         </span>
         {species && (
-          <span className="text-xs text-gray-400 ml-2">
+          <span className="text-xs text-gray-400">
             ({species.name})
           </span>
         )}
+        <span className="text-xs text-gray-400">
+          {stageLabel(character.stage)}
+        </span>
       </div>
 
       {/* 部屋の背景 + キャラクター */}
@@ -122,13 +126,11 @@ export function CharacterDisplay({ character, species }: CharacterDisplayProps) 
             ))}
           </div>
         )}
-      </div>
 
-      {/* ステージ・世代情報 */}
-      <div className="mt-2 flex gap-3 text-sm text-gray-500 font-medium">
-        <span>{stageLabel(character.stage)}</span>
-        <span>{character.age_days}日目</span>
-        <span>{character.generation}代目</span>
+        {/* つぶやき（部屋の下部にオーバーレイ） */}
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
+          <MumbleDisplay />
+        </div>
       </div>
     </div>
   );

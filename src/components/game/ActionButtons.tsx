@@ -59,12 +59,23 @@ function BottomSheet({
 }
 
 export function ActionButtons({ onWalk }: ActionButtonsProps) {
-  const { character, feed, giveSnack, clean, cure, discipline, toggleSleep, playMiniGame, setMessage } = useGameStore();
+  const { character, feed, giveSnack, clean, cure, discipline, pet, toggleSleep, playMiniGame, setMessage } = useGameStore();
   const [showFoodMenu, setShowFoodMenu] = useState(false);
   const [showGameMenu, setShowGameMenu] = useState(false);
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [petCooldown, setPetCooldown] = useState(false);
 
   if (!character) return null;
+
+  const handlePet = () => {
+    if (petCooldown) {
+      setMessage('もう少し待ってね');
+      return;
+    }
+    pet();
+    setPetCooldown(true);
+    setTimeout(() => setPetCooldown(false), 2 * 60 * 1000); // 2分クールダウン
+  };
 
   const actions = [
     {
@@ -87,6 +98,13 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
       onClick: () => { setShowFoodMenu(false); setShowGameMenu(false); onWalk(); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 15,
       gradient: 'from-emerald-400 to-green-400',
+    },
+    {
+      label: '撫でる',
+      icon: '🤚',
+      onClick: handlePet,
+      disabled: character.is_sleeping || petCooldown,
+      gradient: 'from-pink-300 to-rose-300',
     },
     {
       label: '掃除',

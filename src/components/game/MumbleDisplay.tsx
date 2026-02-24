@@ -44,11 +44,11 @@ export function MumbleDisplay() {
         <motion.div
           initial={{ opacity: 0, y: 10, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.9 }}
-          className="relative bg-white/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-md border border-purple-100 max-w-[200px]"
+          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+          className="relative bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-md border border-purple-100 max-w-[200px]"
         >
-          {/* 吹き出しの三角 */}
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/90 border-b border-r border-purple-100 rotate-45" />
+          {/* 吹き出しの三角（上向き：キャラの方を指す） */}
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/90 border-t border-l border-purple-100 rotate-45" />
           <p className="text-sm text-gray-700 text-center relative z-10">{mumble}</p>
         </motion.div>
       )}

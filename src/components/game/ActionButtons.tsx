@@ -7,9 +7,55 @@ import { checkMiniGameCooldown } from '@/lib/game-logic';
 import { MiniGameMemory } from './MiniGameMemory';
 import { MiniGameRhythm } from './MiniGameRhythm';
 import { MiniGameQuiz } from './MiniGameQuiz';
+import { MiniGameWhack } from './MiniGameWhack';
 
 interface ActionButtonsProps {
   onWalk: () => void;
+}
+
+// ボトムシートモーダル（食事・遊び選択用）
+function BottomSheet({
+  isOpen,
+  onClose,
+  title,
+  children,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl pb-safe"
+          >
+            {/* ハンドルバー */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            </div>
+            <p className="text-base text-gray-700 font-bold text-center mb-3">{title}</p>
+            <div className="px-5 pb-6">
+              {children}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 }
 
 export function ActionButtons({ onWalk }: ActionButtonsProps) {
@@ -22,35 +68,35 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
   const actions = [
     {
-      label: 'ごはん',
+      label: 'ご飯',
       icon: '🍚',
-      onClick: () => { setShowFoodMenu(!showFoodMenu); setShowGameMenu(false); },
+      onClick: () => { setShowFoodMenu(true); setShowGameMenu(false); },
       disabled: character.is_sleeping,
       gradient: 'from-orange-400 to-amber-400',
     },
     {
-      label: 'あそぶ',
+      label: '遊ぶ',
       icon: '🎮',
-      onClick: () => { setShowGameMenu(!showGameMenu); setShowFoodMenu(false); },
+      onClick: () => { setShowGameMenu(true); setShowFoodMenu(false); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 10,
       gradient: 'from-purple-400 to-indigo-400',
     },
     {
-      label: 'おさんぽ',
+      label: '散歩',
       icon: '👟',
       onClick: () => { setShowFoodMenu(false); setShowGameMenu(false); onWalk(); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 15,
       gradient: 'from-emerald-400 to-green-400',
     },
     {
-      label: 'そうじ',
+      label: '掃除',
       icon: '🧹',
       onClick: () => clean(),
       disabled: character.poop_count <= 0,
       gradient: 'from-sky-400 to-cyan-400',
     },
     {
-      label: 'ちりょう',
+      label: '治療',
       icon: '💊',
       onClick: () => cure(),
       disabled: !character.is_sick,
@@ -64,7 +110,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
       gradient: 'from-yellow-400 to-amber-300',
     },
     {
-      label: character.is_sleeping ? 'おこす' : 'ねる',
+      label: character.is_sleeping ? '起こす' : '寝る',
       icon: '🌙',
       onClick: () => toggleSleep(),
       disabled: false,
@@ -77,6 +123,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
     { key: 'memory', icon: '🃏', label: '神経衰弱' },
     { key: 'rhythm', icon: '🎵', label: 'リズム' },
     { key: 'quiz', icon: '❓', label: 'クイズ' },
+    { key: 'whack', icon: '🐹', label: 'もぐらたたき' },
   ];
 
   const handleStartGame = (gameKey: string) => {
@@ -118,82 +165,70 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
         ))}
       </div>
 
-      {/* 食事メニュー */}
-      <AnimatePresence>
-        {showFoodMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-orange-100"
+      {/* 食事メニュー（ボトムシート） */}
+      <BottomSheet
+        isOpen={showFoodMenu}
+        onClose={() => setShowFoodMenu(false)}
+        title="何を食べる？"
+      >
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { key: 'onigiri' as const, icon: '🍙', label: 'おにぎり' },
+            { key: 'bread' as const, icon: '🍞', label: 'パン' },
+            { key: 'cake' as const, icon: '🍰', label: 'ケーキ' },
+          ].map((food) => (
+            <button
+              key={food.key}
+              onClick={() => {
+                feed(food.key);
+                setShowFoodMenu(false);
+              }}
+              className="flex flex-col items-center py-4 rounded-2xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
+            >
+              <span className="text-3xl">{food.icon}</span>
+              <span className="text-sm text-gray-700 font-medium mt-1.5">{food.label}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              giveSnack();
+              setShowFoodMenu(false);
+            }}
+            className="flex flex-col items-center py-4 rounded-2xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
           >
-            <p className="text-sm text-gray-500 mb-3 text-center font-medium">なにを食べる？</p>
-            <div className="grid grid-cols-4 gap-2.5">
-              {[
-                { key: 'onigiri' as const, icon: '🍙', label: 'おにぎり' },
-                { key: 'bread' as const, icon: '🍞', label: 'パン' },
-                { key: 'cake' as const, icon: '🍰', label: 'ケーキ' },
-              ].map((food) => (
-                <button
-                  key={food.key}
-                  onClick={() => {
-                    feed(food.key);
-                    setShowFoodMenu(false);
-                  }}
-                  className="flex flex-col items-center py-3 rounded-xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
-                >
-                  <span className="text-2xl">{food.icon}</span>
-                  <span className="text-xs text-gray-700 font-medium mt-1">{food.label}</span>
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  giveSnack();
-                  setShowFoodMenu(false);
-                }}
-                className="flex flex-col items-center py-3 rounded-xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
-              >
-                <span className="text-2xl">🍪</span>
-                <span className="text-xs text-gray-700 font-medium mt-1">おやつ</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <span className="text-3xl">🍪</span>
+            <span className="text-sm text-gray-700 font-medium mt-1.5">おやつ</span>
+          </button>
+        </div>
+      </BottomSheet>
 
-      {/* ミニゲーム選択メニュー */}
-      <AnimatePresence>
-        {showGameMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-purple-100"
-          >
-            <p className="text-sm text-gray-500 mb-3 text-center font-medium">なにであそぶ？</p>
-            <div className="grid grid-cols-4 gap-2.5">
-              {miniGames.map((game) => {
-                const { canPlay } = checkMiniGameCooldown(character, game.key);
-                return (
-                  <button
-                    key={game.key}
-                    onClick={() => handleStartGame(game.key)}
-                    className={`flex flex-col items-center py-3 rounded-xl transition ${
-                      canPlay ? 'bg-purple-50 hover:bg-purple-100 active:bg-purple-200' : 'opacity-40 cursor-not-allowed bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-2xl">{game.icon}</span>
-                    <span className="text-xs text-gray-700 font-medium mt-1">{game.label}</span>
-                    {!canPlay && (
-                      <span className="text-[10px] text-gray-400 mt-0.5">CD中</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ミニゲーム選択（ボトムシート） */}
+      <BottomSheet
+        isOpen={showGameMenu}
+        onClose={() => setShowGameMenu(false)}
+        title="何で遊ぶ？"
+      >
+        <div className="grid grid-cols-3 gap-3">
+          {miniGames.map((game) => {
+            const { canPlay } = checkMiniGameCooldown(character, game.key);
+            return (
+              <button
+                key={game.key}
+                onClick={() => canPlay && handleStartGame(game.key)}
+                className={`flex flex-col items-center py-4 rounded-2xl transition ${
+                  canPlay ? 'bg-purple-50 hover:bg-purple-100 active:bg-purple-200' : 'opacity-40 cursor-not-allowed bg-gray-50'
+                }`}
+              >
+                <span className="text-3xl">{game.icon}</span>
+                <span className="text-sm text-gray-700 font-medium mt-1.5">{game.label}</span>
+                {!canPlay && (
+                  <span className="text-[11px] text-gray-400 mt-0.5">クール中</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </BottomSheet>
 
       {/* ミニゲーム: じゃんけん */}
       <AnimatePresence>
@@ -234,12 +269,22 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* ミニゲーム: もぐらたたき */}
+      <AnimatePresence>
+        {activeGame === 'whack' && (
+          <MiniGameWhack
+            onClose={() => setActiveGame(null)}
+            onComplete={(score) => handleGameComplete('whack', score)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 // =========================================
-// じゃんけんミニゲーム（既存）
+// じゃんけんミニゲーム
 // =========================================
 
 type Hand = 'rock' | 'scissors' | 'paper';
@@ -280,9 +325,9 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
     if (result === 'win') {
       newWins = wins + 1;
       setWins(newWins);
-      setRoundResult('かち！');
+      setRoundResult('勝ち！');
     } else if (result === 'lose') {
-      setRoundResult('まけ...');
+      setRoundResult('負け...');
     } else {
       setRoundResult('あいこ！');
     }
@@ -322,15 +367,15 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
             <span className="text-2xl font-bold text-purple-400">VS</span>
             <div className="text-center">
               <span className="text-4xl">{hands.find(h => h.key === cpuHand)?.emoji}</span>
-              <p className="text-xs text-gray-500 mt-1">あいて</p>
+              <p className="text-xs text-gray-500 mt-1">相手</p>
             </div>
           </div>
         )}
 
         {roundResult && (
           <p className={`text-center text-lg font-bold mb-4 ${
-            roundResult === 'かち！' ? 'text-green-500' :
-            roundResult === 'まけ...' ? 'text-red-400' :
+            roundResult === '勝ち！' ? 'text-green-500' :
+            roundResult === '負け...' ? 'text-red-400' :
             'text-yellow-500'
           }`}>
             {roundResult}
@@ -360,9 +405,9 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
             <p className="text-sm text-gray-500">{wins}勝 / 3回</p>
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition"
+              className="px-6 py-2.5 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition font-bold"
             >
-              とじる
+              閉じる
             </button>
           </div>
         )}

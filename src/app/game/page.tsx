@@ -67,7 +67,7 @@ export default function GamePage() {
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-purple-50 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-4xl animate-bounce">🥚</div>
-          <p className="text-gray-500">読み込み中...</p>
+          <p className="text-gray-500 font-medium">読み込み中...</p>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ export default function GamePage() {
         </div>
 
         {/* キャラクター表示エリア */}
-        <div className="flex-1 flex items-center justify-center w-full">
+        <div className="flex-1 flex items-center justify-center w-full py-2">
           <CharacterDisplay character={character} species={species} />
         </div>
 
@@ -115,7 +115,7 @@ export default function GamePage() {
           <div className="w-full mb-3">
             <button
               onClick={() => loadMarriageCandidates()}
-              className="w-full py-3 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-xl shadow-lg hover:from-pink-500 hover:to-rose-500 transition flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-2xl shadow-lg hover:from-pink-500 hover:to-rose-500 transition flex items-center justify-center gap-2 text-base"
             >
               <span>💒</span>
               <span>けっこんできるよ！</span>
@@ -125,12 +125,12 @@ export default function GamePage() {
         )}
 
         {/* ステータスバー */}
-        <div className="w-full space-y-2 mb-4 bg-white/60 backdrop-blur-sm rounded-xl p-4">
+        <div className="w-full space-y-2.5 mb-4 bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm">
           <StatusBar label="おなか" value={character.hunger} color="bg-orange-400" icon="🍔" />
           <StatusBar label="きもち" value={character.happiness} color="bg-pink-400" icon="💕" />
           <StatusBar label="たいりょく" value={character.stamina} color="bg-green-400" icon="💪" />
           <StatusBar label="きれいさ" value={character.cleanliness} color="bg-blue-400" icon="✨" />
-          <div className="flex justify-between text-xs text-gray-500 pt-1">
+          <div className="flex justify-between text-sm text-gray-500 pt-1 font-medium">
             <span>体重: {character.weight}g</span>
             <span>しつけ: {character.discipline}/100</span>
             {character.is_sick && <span className="text-red-500 font-bold">🤒 病気中</span>}

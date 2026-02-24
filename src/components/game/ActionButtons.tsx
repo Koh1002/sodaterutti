@@ -26,42 +26,49 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
       icon: '🍚',
       onClick: () => { setShowFoodMenu(!showFoodMenu); setShowGameMenu(false); },
       disabled: character.is_sleeping,
+      gradient: 'from-orange-400 to-amber-400',
     },
     {
       label: 'あそぶ',
       icon: '🎮',
       onClick: () => { setShowGameMenu(!showGameMenu); setShowFoodMenu(false); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 10,
+      gradient: 'from-purple-400 to-indigo-400',
     },
     {
       label: 'おさんぽ',
       icon: '👟',
       onClick: () => { setShowFoodMenu(false); setShowGameMenu(false); onWalk(); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 15,
+      gradient: 'from-emerald-400 to-green-400',
     },
     {
       label: 'そうじ',
       icon: '🧹',
       onClick: () => clean(),
       disabled: character.poop_count <= 0,
+      gradient: 'from-sky-400 to-cyan-400',
     },
     {
       label: 'ちりょう',
       icon: '💊',
       onClick: () => cure(),
       disabled: !character.is_sick,
+      gradient: 'from-rose-400 to-pink-400',
     },
     {
       label: 'しつけ',
       icon: '👆',
       onClick: () => discipline(),
       disabled: character.is_sleeping,
+      gradient: 'from-yellow-400 to-amber-300',
     },
     {
       label: character.is_sleeping ? 'おこす' : 'ねる',
       icon: '🌙',
       onClick: () => toggleSleep(),
       disabled: false,
+      gradient: 'from-indigo-400 to-blue-500',
     },
   ];
 
@@ -84,30 +91,29 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
   const handleGameComplete = (gameKey: string, score: number, extra?: { fastClear?: boolean }) => {
     playMiniGame(gameKey, score, extra);
-    // activeGameはonCloseで閉じる
   };
 
   return (
     <div className="space-y-3">
       {/* メインアクションボタン */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2.5">
         {actions.map((action) => (
           <motion.button
             key={action.label}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.92 }}
             onClick={action.onClick}
             disabled={action.disabled}
             className={`
-              flex flex-col items-center justify-center p-2 rounded-xl
-              font-medium text-xs transition-all
+              flex flex-col items-center justify-center py-3 px-1 rounded-2xl
+              font-medium text-sm transition-all
               ${action.disabled
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-white hover:bg-purple-50 text-gray-700 shadow-sm hover:shadow active:shadow-inner border border-gray-200'
+                ? 'bg-gray-200/80 text-gray-400 cursor-not-allowed'
+                : `bg-gradient-to-b ${action.gradient} text-white shadow-md hover:shadow-lg active:shadow-sm`
               }
             `}
           >
-            <span className="text-xl mb-0.5">{action.icon}</span>
-            <span>{action.label}</span>
+            <span className="text-2xl mb-1">{action.icon}</span>
+            <span className="text-xs font-bold">{action.label}</span>
           </motion.button>
         ))}
       </div>
@@ -119,10 +125,10 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-xl shadow-md p-3 border border-gray-100"
+            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-orange-100"
           >
-            <p className="text-xs text-gray-500 mb-2 text-center">なにを食べる？</p>
-            <div className="grid grid-cols-4 gap-2">
+            <p className="text-sm text-gray-500 mb-3 text-center font-medium">なにを食べる？</p>
+            <div className="grid grid-cols-4 gap-2.5">
               {[
                 { key: 'onigiri' as const, icon: '🍙', label: 'おにぎり' },
                 { key: 'bread' as const, icon: '🍞', label: 'パン' },
@@ -134,10 +140,10 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
                     feed(food.key);
                     setShowFoodMenu(false);
                   }}
-                  className="flex flex-col items-center p-2 rounded-lg hover:bg-yellow-50 transition"
+                  className="flex flex-col items-center py-3 rounded-xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
                 >
                   <span className="text-2xl">{food.icon}</span>
-                  <span className="text-xs text-gray-600">{food.label}</span>
+                  <span className="text-xs text-gray-700 font-medium mt-1">{food.label}</span>
                 </button>
               ))}
               <button
@@ -145,10 +151,10 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
                   giveSnack();
                   setShowFoodMenu(false);
                 }}
-                className="flex flex-col items-center p-2 rounded-lg hover:bg-yellow-50 transition"
+                className="flex flex-col items-center py-3 rounded-xl bg-orange-50 hover:bg-orange-100 active:bg-orange-200 transition"
               >
                 <span className="text-2xl">🍪</span>
-                <span className="text-xs text-gray-600">おやつ</span>
+                <span className="text-xs text-gray-700 font-medium mt-1">おやつ</span>
               </button>
             </div>
           </motion.div>
@@ -162,24 +168,24 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-xl shadow-md p-3 border border-gray-100"
+            className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-purple-100"
           >
-            <p className="text-xs text-gray-500 mb-2 text-center">なにであそぶ？</p>
-            <div className="grid grid-cols-4 gap-2">
+            <p className="text-sm text-gray-500 mb-3 text-center font-medium">なにであそぶ？</p>
+            <div className="grid grid-cols-4 gap-2.5">
               {miniGames.map((game) => {
                 const { canPlay } = checkMiniGameCooldown(character, game.key);
                 return (
                   <button
                     key={game.key}
                     onClick={() => handleStartGame(game.key)}
-                    className={`flex flex-col items-center p-2 rounded-lg transition ${
-                      canPlay ? 'hover:bg-purple-50' : 'opacity-40 cursor-not-allowed'
+                    className={`flex flex-col items-center py-3 rounded-xl transition ${
+                      canPlay ? 'bg-purple-50 hover:bg-purple-100 active:bg-purple-200' : 'opacity-40 cursor-not-allowed bg-gray-50'
                     }`}
                   >
                     <span className="text-2xl">{game.icon}</span>
-                    <span className="text-xs text-gray-600">{game.label}</span>
+                    <span className="text-xs text-gray-700 font-medium mt-1">{game.label}</span>
                     {!canPlay && (
-                      <span className="text-[10px] text-gray-400">CD中</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">CD中</span>
                     )}
                   </button>
                 );

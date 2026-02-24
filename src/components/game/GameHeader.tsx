@@ -36,16 +36,20 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
   const completedMissions = dailyMissions.filter(m => m.is_completed).length;
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-purple-100 px-4 py-2">
-      <div className="max-w-lg mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-          <span>🕐 {timeString}</span>
+    <header className="bg-gradient-to-r from-purple-500/90 to-pink-400/90 backdrop-blur-md shadow-lg">
+      <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className="text-white font-bold text-base tracking-wide">
+            {timeString}
+          </span>
           {character && (
             <>
-              <span className="text-purple-500 font-medium">
+              <span className="bg-white/25 text-white text-sm font-medium px-2.5 py-0.5 rounded-full">
                 {character.generation}代目
               </span>
-              <span>{character.age_days}日目</span>
+              <span className="text-white/90 text-sm font-medium">
+                {character.age_days}日目
+              </span>
             </>
           )}
         </div>
@@ -53,43 +57,43 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
         <div className="flex items-center gap-1">
           <button
             onClick={onOpenMissions}
-            className="relative text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+            className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 active:bg-white/30 transition text-lg"
           >
             📋
             {completedMissions > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[10px] rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-green-400 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-sm">
                 {completedMissions}
               </span>
             )}
             {activeMissions > 0 && completedMissions === 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-purple-400 text-white text-[10px] rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-yellow-400 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-sm">
                 {activeMissions}
               </span>
             )}
           </button>
           <button
             onClick={onOpenAchievements}
-            className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 active:bg-white/30 transition text-lg"
           >
             🏆
           </button>
           <button
             onClick={() => router.push('/game/encyclopedia')}
-            className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 active:bg-white/30 transition text-lg"
           >
             📖
           </button>
           <button
             onClick={() => router.push('/game/family-tree')}
-            className="text-xs px-2 py-1 rounded-lg hover:bg-purple-50 text-gray-500 transition"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 active:bg-white/30 transition text-lg"
           >
             🌳
           </button>
           <button
             onClick={handleLogout}
-            className="text-xs px-2 py-1 rounded-lg hover:bg-red-50 text-gray-400 transition"
+            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 active:bg-white/30 transition text-lg"
           >
-            ↩
+            ↩️
           </button>
         </div>
       </div>

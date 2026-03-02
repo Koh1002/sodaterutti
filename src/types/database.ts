@@ -155,7 +155,7 @@ export interface Database {
           gene: Json;
           parent_character_id: string | null;
           partner_species_id: string | null;
-          cause_of_departure: 'marriage' | 'death_age' | 'death_sick';
+          cause_of_departure: 'marriage' | 'death_age' | 'death_sick' | 'evolution';
           age_at_departure: number;
           born_at: string;
           departed_at: string;
@@ -172,7 +172,7 @@ export interface Database {
           gene?: Json;
           parent_character_id?: string | null;
           partner_species_id?: string | null;
-          cause_of_departure: 'marriage' | 'death_age' | 'death_sick';
+          cause_of_departure: 'marriage' | 'death_age' | 'death_sick' | 'evolution';
           age_at_departure?: number;
           born_at: string;
           departed_at?: string;

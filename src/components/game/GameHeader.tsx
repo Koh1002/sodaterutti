@@ -58,6 +58,13 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
       badgeColor: '',
     },
     {
+      label: 'バトル',
+      icon: '⚔️',
+      onClick: () => router.push('/game/battle'),
+      badge: null,
+      badgeColor: '',
+    },
+    {
       label: '家系図',
       icon: '🌳',
       onClick: () => router.push('/game/family-tree'),

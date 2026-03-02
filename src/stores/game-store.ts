@@ -303,6 +303,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     const nextSpecies = allSpecies.find(s => s.id === nextSpeciesId);
     if (!nextSpecies) return;
 
+    // 進化前の種族を図鑑記録用にcharacter_historyに保存
+    await supabase.from('character_history').insert({
+      user_id: character.user_id,
+      name: character.name || species.name,
+      species_id: character.species_id,
+      final_stage: character.stage,
+      gender: character.gender,
+      generation: character.generation,
+      age_at_departure: character.age_days,
+      gene: character.gene || {},
+      cause_of_departure: 'evolution',
+      parent_character_id: character.parent_character_id,
+      born_at: character.born_at,
+      departed_at: new Date().toISOString(),
+    });
+
     // 進化を実行
     const updated = await updateCharacter(character.id, {
       species_id: nextSpeciesId,

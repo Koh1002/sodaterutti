@@ -70,6 +70,7 @@ export default function FamilyTreePage() {
       case 'marriage': return '💒 結婚して旅立ち';
       case 'death_age': return '🌟 寿命';
       case 'death_sick': return '💫 病気';
+      case 'evolution': return '✨ 進化';
       default: return cause;
     }
   };

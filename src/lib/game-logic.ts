@@ -39,11 +39,11 @@ export const AUTO_SLEEP_END = 6;    // 06:00
 
 /** クールダウン（ミリ秒） */
 export const COOLDOWNS = {
-  feed: 30 * 60 * 1000,       // 30分
-  snack: 60 * 60 * 1000,      // 1時間
-  play: 60 * 60 * 1000,       // 1時間
+  feed: 5 * 60 * 1000,         // 5分
+  snack: 15 * 60 * 1000,       // 15分
+  play: 60 * 60 * 1000,        // 1時間
   discipline: 2 * 60 * 60 * 1000, // 2時間
-  walk: 30 * 60 * 1000,       // 30分
+  walk: 30 * 60 * 1000,        // 30分
 } as const;
 
 /** ミニゲーム個別クールダウン（ミリ秒） */
@@ -188,9 +188,9 @@ export function feedAction(character: Character, foodType: 'onigiri' | 'bread' |
   }
 
   const effects: Record<string, { hunger: number; happiness: number; weight: number }> = {
-    onigiri: { hunger: 20, happiness: 0, weight: 2 },
-    bread: { hunger: 20, happiness: 0, weight: 2 },
-    cake: { hunger: 20, happiness: 5, weight: 5 },
+    onigiri: { hunger: 80, happiness: 0, weight: 2 },
+    bread: { hunger: 80, happiness: 0, weight: 2 },
+    cake: { hunger: 80, happiness: 5, weight: 5 },
   };
 
   const effect = effects[foodType];
@@ -222,7 +222,7 @@ export function snackAction(character: Character): ActionResult {
     success: true,
     message: 'おやつ大好き！',
     updates: {
-      hunger: clamp(character.hunger + 5, 0, 100),
+      hunger: clamp(character.hunger + 20, 0, 100),
       happiness: clamp(character.happiness + 10, 0, 100),
       weight: clamp(character.weight + 3, 1, 99),
       last_fed_at: new Date().toISOString(),

@@ -15,13 +15,13 @@ CREATE POLICY "Authenticated users can view all characters"
   USING (true);
 
 -- フレンドコード（UUID先頭8文字）でユーザーを検索するRPC関数
-CREATE OR REPLACE FUNCTION search_user_by_friend_code(friend_code TEXT)
-RETURNS TABLE(id UUID, username TEXT) AS $$
+CREATE OR REPLACE FUNCTION search_user_by_friend_code(fc TEXT)
+RETURNS TABLE(uid UUID, uname TEXT) AS $$
 BEGIN
   RETURN QUERY
-    SELECT p.id, p.username
-    FROM profiles p
-    WHERE p.id::text ILIKE friend_code || '%'
+    SELECT profiles.id, profiles.username
+    FROM profiles
+    WHERE profiles.id::text ILIKE fc || '%'
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

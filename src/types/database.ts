@@ -432,8 +432,8 @@ export interface Database {
     Views: Record<string, never>;
     Functions: {
       search_user_by_friend_code: {
-        Args: { friend_code: string };
-        Returns: { id: string; username: string }[];
+        Args: { fc: string };
+        Returns: { uid: string; uname: string }[];
       };
     };
     Enums: Record<string, never>;

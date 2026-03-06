@@ -18,11 +18,12 @@ type Species = Database['public']['Tables']['species']['Row'];
 
 export default function BattlePage() {
   const router = useRouter();
-  const { character, species, setMessage } = useGameStore();
+  const { character, species, loadCharacter, setMessage } = useGameStore();
   const [mode, setMode] = useState<'menu' | 'difficulty' | 'friend-menu' | 'battle'>('menu');
   const [playerBattler, setPlayerBattler] = useState<Battler | null>(null);
   const [opponentBattler, setOpponentBattler] = useState<Battler | null>(null);
   const [allSpecies, setAllSpecies] = useState<Species[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // フレンド対戦用
   const [friendCode, setFriendCode] = useState('');
@@ -35,12 +36,24 @@ export default function BattlePage() {
       const { data } = await supabase.from('species').select('*');
       if (data) setAllSpecies(data as Species[]);
 
+      // キャラクターがまだストアにない場合はロード
+      if (!character) await loadCharacter();
+
       // 自分のフレンドコード = user_id の先頭8文字
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setMyCode(user.id.slice(0, 8).toUpperCase());
+      setIsLoading(false);
     };
     load();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex items-center justify-center">
+        <p className="text-gray-500 text-2xl animate-bounce">🥚</p>
+      </div>
+    );
+  }
 
   if (!character || !species) {
     return (
@@ -85,10 +98,10 @@ export default function BattlePage() {
       return;
     }
     const { data } = await supabase
-      .rpc('search_user_by_friend_code', { friend_code: code });
+      .rpc('search_user_by_friend_code', { fc: code });
 
     if (data && data.length > 0) {
-      const friendId = data[0].id;
+      const friendId = data[0].uid;
       // フレンドのキャラクターを取得
       const { data: friendChar } = await supabase
         .from('characters')

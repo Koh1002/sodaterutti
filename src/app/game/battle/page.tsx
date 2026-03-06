@@ -78,12 +78,14 @@ export default function BattlePage() {
   const searchFriend = async () => {
     if (friendCode.length < 4) return;
     const supabase = createClient();
-    // フレンドコードでプロフィールを検索
+    // フレンドコードでプロフィールを検索（RPC関数でUUID::textの前方一致）
+    const code = friendCode.toLowerCase().replace(/[^a-f0-9]/g, '');
+    if (code.length < 4) {
+      setFriendSearchResult('4文字以上入力してください');
+      return;
+    }
     const { data } = await supabase
-      .from('profiles')
-      .select('id, username')
-      .ilike('id', `${friendCode.toLowerCase()}%`)
-      .limit(1);
+      .rpc('search_user_by_friend_code', { friend_code: code });
 
     if (data && data.length > 0) {
       const friendId = data[0].id;

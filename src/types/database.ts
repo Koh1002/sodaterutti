@@ -430,7 +430,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      search_user_by_friend_code: {
+        Args: { friend_code: string };
+        Returns: { id: string; username: string }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

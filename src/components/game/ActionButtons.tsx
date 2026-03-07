@@ -110,7 +110,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
       label: '掃除',
       icon: '🧹',
       onClick: () => clean(),
-      disabled: character.poop_count <= 0,
+      disabled: character.is_sleeping || character.cleanliness >= 100,
       gradient: 'from-sky-400 to-cyan-400',
     },
     {

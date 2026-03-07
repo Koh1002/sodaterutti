@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useAnimation } from 'framer-motion';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
 import { MumbleDisplay } from './MumbleDisplay';
 import type { Database } from '@/types/database';
@@ -13,34 +13,73 @@ type Species = Database['public']['Tables']['species']['Row'];
 interface CharacterDisplayProps {
   character: Character;
   species: Species | null;
+  onTap?: () => void;
 }
 
-export function CharacterDisplay({ character, species }: CharacterDisplayProps) {
+// タッチ時のリアクションアニメーション
+const touchReactions = [
+  // ぴょんぴょんジャンプ
+  { y: [0, -30, 0, -15, 0], rotate: 0, x: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' as const } },
+  // 横にごろごろ
+  { rotate: [0, 15, -15, 10, -10, 0], x: [0, 10, -10, 5, -5, 0], y: 0, scale: 1, transition: { duration: 0.7, ease: 'easeInOut' as const } },
+  // くるっと回転
+  { rotate: [0, 360], scale: [1, 1.15, 1], y: 0, x: 0, transition: { duration: 0.5, ease: 'easeInOut' as const } },
+  // ぷるぷる震える
+  { x: [0, -5, 5, -5, 5, -3, 3, 0], y: 0, rotate: 0, scale: 1, transition: { duration: 0.4 } },
+  // 大きくはねる
+  { y: [0, -40, 0], scale: [1, 1.2, 1], rotate: 0, x: 0, transition: { duration: 0.5, type: 'spring' as const, stiffness: 300 } },
+];
+
+export function CharacterDisplay({ character, species, onTap }: CharacterDisplayProps) {
   const [imgError, setImgError] = useState(false);
+  const reactingRef = useRef(false);
+  const controls = useAnimation();
   const imageKey = species?.image_key || 'baby_boy';
   const imageSrc = imgError
     ? getPlaceholderSvg(imageKey)
     : getCharacterImagePath(imageKey);
 
-  // アニメーション定義
-  const getAnimation = () => {
+  // 通常アニメーション定義
+  const getIdleAnimation = useCallback(() => {
     if (character.is_sleeping) {
       return {
-        y: [0, -3, 0],
+        y: [0, -3, 0], x: 0, rotate: 0, scale: 1,
         transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },
       };
     }
     if (character.is_sick) {
       return {
-        x: [-2, 2, -2],
+        x: [-2, 2, -2], y: 0, rotate: 0, scale: 1,
         transition: { duration: 0.5, repeat: Infinity, ease: 'easeInOut' as const },
       };
     }
     return {
-      y: [0, -8, 0],
+      y: [0, -8, 0], x: 0, rotate: 0, scale: 1,
       transition: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' as const },
     };
-  };
+  }, [character.is_sleeping, character.is_sick]);
+
+  // アイドルアニメーション開始
+  useEffect(() => {
+    if (!reactingRef.current) {
+      controls.start(getIdleAnimation());
+    }
+  }, [controls, getIdleAnimation]);
+
+  // タッチ時のリアクション
+  const handleTap = useCallback(async () => {
+    if (reactingRef.current || character.is_sleeping) return;
+    reactingRef.current = true;
+
+    // ランダムにリアクションを選択
+    const reaction = touchReactions[Math.floor(Math.random() * touchReactions.length)];
+    await controls.start(reaction);
+    // 通常アニメーションに戻す
+    controls.start(getIdleAnimation());
+    reactingRef.current = false;
+
+    onTap?.();
+  }, [character.is_sleeping, controls, getIdleAnimation, onTap]);
 
   return (
     <div className="relative flex flex-col items-center w-full">
@@ -73,8 +112,9 @@ export function CharacterDisplay({ character, species }: CharacterDisplayProps) 
         {/* キャラクター画像（中央配置） */}
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
-            animate={getAnimation()}
-            className="relative w-40 h-40"
+            animate={controls}
+            className="relative w-40 h-40 cursor-pointer"
+            onClick={handleTap}
           >
             <Image
               src={imageSrc}

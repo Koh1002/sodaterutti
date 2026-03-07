@@ -45,7 +45,7 @@ export default function BattlePage() {
       setIsLoading(false);
     };
     load();
-  }, []);
+  }, [character, loadCharacter]);
 
   if (isLoading) {
     return (

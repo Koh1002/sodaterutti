@@ -274,16 +274,28 @@ export function playAction(character: Character, gameScore: number): ActionResul
 
 /** 掃除 */
 export function cleanAction(character: Character): ActionResult {
-  if (character.poop_count <= 0) {
-    return { success: false, message: 'きれいだよ！掃除するところがないよ' };
+  // うんちがある場合：うんち除去 + 清潔さ大回復
+  if (character.poop_count > 0) {
+    return {
+      success: true,
+      message: 'ピカピカ！きれいになった！',
+      updates: {
+        cleanliness: clamp(character.cleanliness + 30, 0, 100),
+        poop_count: Math.max(0, character.poop_count - 1),
+      },
+    };
+  }
+
+  // うんちがなくても軽い掃除ができる（清潔さ少し回復）
+  if (character.cleanliness >= 100) {
+    return { success: false, message: 'もうピカピカだよ！' };
   }
 
   return {
     success: true,
-    message: 'ピカピカ！きれいになった！',
+    message: 'さっとお掃除！すこしきれいになった',
     updates: {
-      cleanliness: clamp(character.cleanliness + 30, 0, 100),
-      poop_count: Math.max(0, character.poop_count - 1),
+      cleanliness: clamp(character.cleanliness + 10, 0, 100),
     },
   };
 }

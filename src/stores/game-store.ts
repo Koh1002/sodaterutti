@@ -185,7 +185,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       get().loadDailyMissions();
       get().loadAchievements();
       get().progressMission('login');
-    } catch (err) {
+    } catch {
       set({ isLoading: false, error: 'データの読み込みに失敗しました' });
     }
   },

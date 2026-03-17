@@ -185,8 +185,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       get().loadDailyMissions();
       get().loadAchievements();
       get().progressMission('login');
-    } catch {
-      set({ isLoading: false });
+    } catch (err) {
+      set({ isLoading: false, error: 'データの読み込みに失敗しました' });
     }
   },
 
@@ -307,7 +307,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!nextSpecies) return;
 
     // 進化前の種族を図鑑記録用にcharacter_historyに保存
-    await supabase.from('character_history').insert({
+    const { error: historyError } = await supabase.from('character_history').insert({
       user_id: character.user_id,
       name: character.name || species.name,
       species_id: character.species_id,
@@ -321,6 +321,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       born_at: character.born_at,
       departed_at: new Date().toISOString(),
     });
+
+    if (historyError) {
+      console.error('Failed to record evolution history:', historyError);
+    }
 
     // 進化を実行
     const updated = await updateCharacter(character.id, {
@@ -782,13 +786,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     const newVal = clamp(currentVal + mission.reward_amount, 0, 100);
     const updated = await updateCharacter(character.id, { [rewardKey]: newVal });
 
-    if (updated) {
-      set({ character: updated, message: `ミッション報酬をゲット！` });
+    if (!updated) {
+      set({ message: 'ミッション報酬の受け取りに失敗しました' });
+      return;
     }
 
     const supabase = createClient();
-    await supabase.from('daily_missions').delete().eq('id', missionId);
-    set({ dailyMissions: dailyMissions.filter(m => m.id !== missionId) });
+    const { error: deleteError } = await supabase.from('daily_missions').delete().eq('id', missionId);
+    if (!deleteError) {
+      set({ character: updated, message: `ミッション報酬をゲット！`, dailyMissions: dailyMissions.filter(m => m.id !== missionId) });
+    } else {
+      set({ character: updated, message: `ミッション報酬をゲット！` });
+    }
 
     get().checkAchievements();
   },

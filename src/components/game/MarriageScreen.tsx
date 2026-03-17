@@ -132,7 +132,7 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
             animate={{ opacity: 1 }}
             className="text-lg text-gray-600"
           >
-            {characterName}は{selectedCandidate?.name}と旅立ちました...
+            {characterName}は{selectedCandidate?.name || 'パートナー'}と旅立ちました...
           </motion.p>
 
           <motion.div

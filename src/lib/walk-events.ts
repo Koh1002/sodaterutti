@@ -178,12 +178,16 @@ export function getRandomWalkEvents(count: number = 3): WalkEvent[] {
 
     if (roll < 0.05) {
       pool = available.filter(e => e.rarity === 'rare');
+      // レアが枯渇したらアンコモンにフォールバック
+      if (pool.length === 0) pool = available.filter(e => e.rarity === 'uncommon');
     } else if (roll < 0.30) {
       pool = available.filter(e => e.rarity === 'uncommon');
     } else {
       pool = available.filter(e => e.rarity === 'common');
     }
 
+    // それでも空ならコモンにフォールバック
+    if (pool.length === 0) pool = available.filter(e => e.rarity === 'common');
     if (pool.length === 0) pool = available;
 
     const idx = Math.floor(Math.random() * pool.length);

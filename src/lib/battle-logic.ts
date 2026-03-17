@@ -105,11 +105,11 @@ export function calculateStrength(stats: {
   mini_game_total_score: number;
   mini_game_play_count: number;
 }): number {
-  const careMiss = Math.max(0, 100 - stats.care_miss_count * 10);
-  const disc = stats.discipline;
-  const weightDiff = Math.max(0, 100 - Math.abs(stats.weight - stats.base_weight) * 5);
+  const careMiss = Math.max(0, 100 - (stats.care_miss_count || 0) * 10);
+  const disc = stats.discipline || 0;
+  const weightDiff = Math.max(0, 100 - Math.abs((stats.weight || 10) - (stats.base_weight || 10)) * 5);
   const avgGame = stats.mini_game_play_count > 0
-    ? (stats.mini_game_total_score / stats.mini_game_play_count / 3) * 100
+    ? Math.min(100, ((stats.mini_game_total_score || 0) / stats.mini_game_play_count / 3) * 100)
     : 50;
 
   const total = Math.round(

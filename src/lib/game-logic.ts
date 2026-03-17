@@ -114,17 +114,21 @@ export function calculateTimeElapsed(
   cleanliness = clamp(cleanliness, 0, 100);
   stamina = clamp(stamina, 0, 100);
 
-  // お世話ミス判定
-  const careMissOccurred = hunger === 0 || happiness === 0;
+  // お世話ミス判定（病気閾値と統一）
+  const careMissOccurred = hunger <= SICK_THRESHOLD.hunger || happiness === 0;
   const careMissCount = character.care_miss_count + (careMissOccurred ? 1 : 0);
 
-  // うんち発生判定
-  const poopChance = 1 - Math.pow(1 - POOP_CHANCE_PER_HOUR, elapsedHours);
-  const poopGenerated = Math.random() < poopChance;
+  // うんち発生判定（長時間放置で複数個生成）
   let poopCount = character.poop_count;
-  if (poopGenerated) {
-    poopCount += 1;
-    cleanliness = clamp(cleanliness - 20, 0, 100);
+  let poopGenerated = false;
+  const expectedPoops = Math.floor(elapsedHours * POOP_CHANCE_PER_HOUR);
+  const fractionalChance = (elapsedHours * POOP_CHANCE_PER_HOUR) - expectedPoops;
+  let newPoops = expectedPoops + (Math.random() < fractionalChance ? 1 : 0);
+  newPoops = Math.min(newPoops, 10); // 上限10個
+  if (newPoops > 0) {
+    poopGenerated = true;
+    poopCount += newPoops;
+    cleanliness = clamp(cleanliness - 20 * newPoops, 0, 100);
   }
 
   // 病気判定

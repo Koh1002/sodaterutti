@@ -48,8 +48,8 @@ export function generateDailyMissions(): MissionTemplate[] {
 
   // loginミッションが選ばれなかった場合、必ず1つ追加（初回3枠未満の場合）
   if (selected.length < 3 && !usedTypes.has('login')) {
-    const login = MISSION_POOL.find(m => m.type === 'login')!;
-    selected.push(login);
+    const login = MISSION_POOL.find(m => m.type === 'login');
+    if (login) selected.push(login);
   }
 
   return selected;

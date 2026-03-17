@@ -140,6 +140,13 @@ export interface Database {
             isOneToOne: false;
             referencedRelation: "species";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "characters_parent_character_id_fkey";
+            columns: ["parent_character_id"];
+            isOneToOne: false;
+            referencedRelation: "character_history";
+            referencedColumns: ["id"];
           }
         ];
       };
@@ -193,6 +200,20 @@ export interface Database {
           {
             foreignKeyName: "character_history_species_id_fkey";
             columns: ["species_id"];
+            isOneToOne: false;
+            referencedRelation: "species";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "character_history_parent_character_id_fkey";
+            columns: ["parent_character_id"];
+            isOneToOne: false;
+            referencedRelation: "character_history";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "character_history_partner_species_id_fkey";
+            columns: ["partner_species_id"];
             isOneToOne: false;
             referencedRelation: "species";
             referencedColumns: ["id"];

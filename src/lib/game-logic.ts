@@ -432,14 +432,19 @@ export function calculateCareScore(character: Character, baseWeight: number): Ca
     : 1.5; // デフォルト中間値
   const miniGameScore = Math.min(100, (avgGameScore / 3) * 100);
 
+  // 遺伝スコア: キャラのgeneから取得（未設定なら50）
+  const gene = character.gene as Record<string, unknown> | null;
+  const geneticsScore = typeof gene?.geneticsScore === 'number'
+    ? clamp(gene.geneticsScore, 0, 100)
+    : 50;
+
   // 重み付け合計
   const total = Math.round(
     careMissScore * 0.30 +
     disciplineScore * 0.25 +
     weightScore * 0.15 +
     miniGameScore * 0.15 +
-    // 残り15%は遺伝（別途計算）→ ここではデフォルト50点
-    50 * 0.15
+    geneticsScore * 0.15
   );
 
   return {

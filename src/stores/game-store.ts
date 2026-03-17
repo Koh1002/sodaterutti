@@ -98,7 +98,7 @@ interface GameState {
 
   // アクション
   loadCharacter: () => Promise<void>;
-  createNewEgg: (name?: string, parentGene?: Record<string, string>) => Promise<void>;
+  createNewEgg: (name?: string, parentGene?: Record<string, string | number>) => Promise<void>;
   recalculateStatus: () => Promise<void>;
   checkEvolution: () => Promise<void>;
   completeEvolution: () => void;
@@ -216,6 +216,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       eyeType: 'round',
       personality: 'neutral',
     };
+    // 遺伝スコアが未設定なら初回ランダム生成（0-100）
+    if (typeof gene.geneticsScore !== 'number') {
+      gene.geneticsScore = Math.round(Math.random() * 100);
+    }
 
     const { data: rawNew, error } = await supabase
       .from('characters')
@@ -408,10 +412,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       .eq('id', character.id);
 
     // 遺伝子を混合
-    const parentGene = character.gene as Record<string, string> | null;
-    const partnerGene = candidate.gene as Record<string, string> | null;
+    const parentGene = character.gene as Record<string, string | number> | null;
+    const partnerGene = candidate.gene as Record<string, string | number> | null;
 
-    const childGene: Record<string, string> = {
+    const childGene: Record<string, string | number> = {
       bodyColor: Math.random() < 0.5
         ? (parentGene?.bodyColor || 'blue')
         : (partnerGene?.bodyColor || 'pink'),
@@ -422,6 +426,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         ? (parentGene?.personality || 'neutral')
         : (partnerGene?.personality || 'neutral'),
     };
+
+    // 遺伝スコア: 両親の平均 ± ランダム変動（-20〜+20）
+    const parentScore = typeof parentGene?.geneticsScore === 'number' ? parentGene.geneticsScore : 50;
+    const partnerScore = typeof partnerGene?.geneticsScore === 'number' ? partnerGene.geneticsScore : 50;
+    const avgScore = (parentScore + partnerScore) / 2;
+    const mutation = (Math.random() - 0.5) * 40; // -20〜+20
+    childGene.geneticsScore = Math.round(Math.max(0, Math.min(100, avgScore + mutation)));
 
     // 突然変異（5%の確率）
     if (Math.random() < 0.05) {

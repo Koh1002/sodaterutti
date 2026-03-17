@@ -426,10 +426,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     // 履歴保存が成功してからキャラクターを非活性化
-    await supabase
+    const { error: deactivateError } = await supabase
       .from('characters')
       .update({ is_alive: false })
       .eq('id', character.id);
+
+    if (deactivateError) {
+      console.error('Failed to deactivate character:', deactivateError);
+      set({ message: 'キャラクターの更新に失敗しました。もう一度試してください。' });
+      return;
+    }
 
     // 遺伝子を混合
     const parentGene = character.gene as Record<string, string | number> | null;
@@ -508,10 +514,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     // 履歴保存が成功してからキャラクターを非活性化
-    await supabase
+    const { error: deactivateError } = await supabase
       .from('characters')
       .update({ is_alive: false })
       .eq('id', character.id);
+
+    if (deactivateError) {
+      console.error('Failed to deactivate character:', deactivateError);
+      set({ message: 'キャラクターの更新に失敗しました。もう一度試してください。' });
+      return;
+    }
 
     set({
       deathInfo: {

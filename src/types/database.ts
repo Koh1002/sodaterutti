@@ -179,7 +179,7 @@ export interface Database {
         };
         Update: {
           partner_species_id?: string | null;
-          cause_of_departure?: 'marriage' | 'death_age' | 'death_sick';
+          cause_of_departure?: 'marriage' | 'death_age' | 'death_sick' | 'evolution';
           departed_at?: string;
         };
         Relationships: [

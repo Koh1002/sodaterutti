@@ -337,9 +337,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     if (historyError) {
       console.error('Failed to record evolution history:', historyError);
+      set({ message: '進化の記録に失敗しました。もう一度試してください。' });
+      return;
     }
 
-    // 進化を実行
+    // 履歴保存が成功してから進化を実行
     const updated = await updateCharacter(character.id, {
       species_id: nextSpeciesId,
       stage: nextSpecies.stage,
@@ -912,6 +914,29 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       if (shouldUnlock) {
         newUnlocks.push(achievement.id);
+      }
+    }
+
+    // コレクション系実績（species_discovered）はDBから発見数を取得して判定
+    const collectionAchievements = allAchievements.filter(
+      a => a.condition_type === 'species_discovered' && !unlockedIds.has(a.id)
+    );
+    if (collectionAchievements.length > 0) {
+      const [historySpecies, charSpecies] = await Promise.all([
+        supabase.from('character_history').select('species_id').eq('user_id', user.id),
+        supabase.from('characters').select('species_id').eq('user_id', user.id),
+      ]);
+      const discoveredIds = new Set<string>();
+      (historySpecies.data as Array<{ species_id: string }> | null)?.forEach(h => discoveredIds.add(h.species_id));
+      (charSpecies.data as Array<{ species_id: string }> | null)?.forEach(c => discoveredIds.add(c.species_id));
+      const discoveredCount = discoveredIds.size;
+
+      for (const achievement of collectionAchievements) {
+        // species_all (全種コンプ) は allSpecies の総数と比較
+        const target = achievement.condition_value;
+        if (discoveredCount >= target) {
+          newUnlocks.push(achievement.id);
+        }
       }
     }
 

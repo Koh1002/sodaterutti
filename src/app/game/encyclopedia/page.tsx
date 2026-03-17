@@ -8,7 +8,6 @@ import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images
 import type { Database } from '@/types/database';
 
 type Species = Database['public']['Tables']['species']['Row'];
-type CharacterHistory = Database['public']['Tables']['character_history']['Row'];
 
 export default function EncyclopediaPage() {
   const router = useRouter();
@@ -26,14 +25,15 @@ export default function EncyclopediaPage() {
 
       const [speciesRes, historyRes, charRes] = await Promise.all([
         supabase.from('species').select('*').order('stage'),
-        supabase.from('character_history').select('*').eq('user_id', user.id),
-        supabase.from('characters').select('*').eq('user_id', user.id).eq('is_alive', true),
+        supabase.from('character_history').select('species_id').eq('user_id', user.id),
+        // is_alive問わず全キャラの種族を取得（履歴保存失敗で消失したデータも拾う安全策）
+        supabase.from('characters').select('species_id').eq('user_id', user.id),
       ]);
 
       if (speciesRes.data) setAllSpecies(speciesRes.data as Species[]);
 
       const ids = new Set<string>();
-      (historyRes.data as CharacterHistory[] | null)?.forEach((h) => ids.add(h.species_id));
+      (historyRes.data as Array<{ species_id: string }> | null)?.forEach((h) => ids.add(h.species_id));
       (charRes.data as Array<{ species_id: string }> | null)?.forEach((c) => ids.add(c.species_id));
       setDiscoveredIds(ids);
       setLoading(false);

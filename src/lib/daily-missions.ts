@@ -11,25 +11,27 @@ export interface MissionTemplate {
 }
 
 const MISSION_POOL: MissionTemplate[] = [
-  // お世話系
-  { type: 'feed', label: 'ごはんを2回あげよう', targetCount: 2, rewardType: 'happiness', rewardAmount: 10 },
-  { type: 'feed', label: 'ごはんを3回あげよう', targetCount: 3, rewardType: 'happiness', rewardAmount: 15 },
-  { type: 'clean', label: 'そうじを1回しよう', targetCount: 1, rewardType: 'happiness', rewardAmount: 8 },
-  { type: 'clean', label: 'そうじを2回しよう', targetCount: 2, rewardType: 'happiness', rewardAmount: 12 },
-  { type: 'discipline', label: 'しつけを1回しよう', targetCount: 1, rewardType: 'stamina', rewardAmount: 10 },
-  // ミニゲーム系
-  { type: 'game_play', label: 'ミニゲームを2回遊ぼう', targetCount: 2, rewardType: 'happiness', rewardAmount: 12 },
-  { type: 'game_play', label: 'ミニゲームを3回遊ぼう', targetCount: 3, rewardType: 'happiness', rewardAmount: 18 },
-  { type: 'game_win', label: 'ミニゲームで2回勝とう', targetCount: 2, rewardType: 'happiness', rewardAmount: 15 },
-  // 散歩系
-  { type: 'walk', label: 'おさんぽに1回行こう', targetCount: 1, rewardType: 'happiness', rewardAmount: 10 },
-  { type: 'walk', label: 'おさんぽに2回行こう', targetCount: 2, rewardType: 'happiness', rewardAmount: 15 },
-  // 複合系
-  { type: 'any_action', label: 'お世話を5回しよう', targetCount: 5, rewardType: 'happiness', rewardAmount: 20 },
-  { type: 'any_action', label: 'お世話を8回しよう', targetCount: 8, rewardType: 'stamina', rewardAmount: 25 },
+  // お世話系 - ごはん → おなか回復
+  { type: 'feed', label: 'ごはんを2回あげよう', targetCount: 2, rewardType: 'hunger', rewardAmount: 15 },
+  { type: 'feed', label: 'ごはんを3回あげよう', targetCount: 3, rewardType: 'hunger', rewardAmount: 25 },
+  // お世話系 - そうじ → きれいさ回復
+  { type: 'clean', label: 'そうじを1回しよう', targetCount: 1, rewardType: 'cleanliness', rewardAmount: 15 },
+  { type: 'clean', label: 'そうじを2回しよう', targetCount: 2, rewardType: 'cleanliness', rewardAmount: 25 },
+  // お世話系 - しつけ → たいりょく回復
+  { type: 'discipline', label: 'しつけを1回しよう', targetCount: 1, rewardType: 'stamina', rewardAmount: 15 },
+  // ミニゲーム系 → きもち回復（遊びなので）
+  { type: 'game_play', label: 'ミニゲームを2回遊ぼう', targetCount: 2, rewardType: 'happiness', rewardAmount: 15 },
+  { type: 'game_play', label: 'ミニゲームを3回遊ぼう', targetCount: 3, rewardType: 'stamina', rewardAmount: 20 },
+  { type: 'game_win', label: 'ミニゲームで2回勝とう', targetCount: 2, rewardType: 'happiness', rewardAmount: 20 },
+  // 散歩系 → たいりょく・きもち
+  { type: 'walk', label: 'おさんぽに1回行こう', targetCount: 1, rewardType: 'happiness', rewardAmount: 12 },
+  { type: 'walk', label: 'おさんぽに2回行こう', targetCount: 2, rewardType: 'stamina', rewardAmount: 20 },
+  // 複合系 → 各種パラメータ
+  { type: 'any_action', label: 'お世話を5回しよう', targetCount: 5, rewardType: 'hunger', rewardAmount: 20 },
+  { type: 'any_action', label: 'お世話を8回しよう', targetCount: 8, rewardType: 'cleanliness', rewardAmount: 25 },
   // 特殊
-  { type: 'login', label: 'アプリを開こう', targetCount: 1, rewardType: 'happiness', rewardAmount: 5 },
-  { type: 'snack', label: 'おやつをあげよう', targetCount: 1, rewardType: 'hunger', rewardAmount: 10 },
+  { type: 'login', label: 'アプリを開こう', targetCount: 1, rewardType: 'happiness', rewardAmount: 8 },
+  { type: 'snack', label: 'おやつをあげよう', targetCount: 1, rewardType: 'hunger', rewardAmount: 15 },
 ];
 
 /** 本日のミッションを3つ生成 */

@@ -22,9 +22,12 @@ export default function FamilyTreePage() {
     const loadData = async () => {
       const supabase = createClient();
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
       const [speciesRes, historyRes] = await Promise.all([
         supabase.from('species').select('*'),
-        supabase.from('character_history').select('*').order('generation', { ascending: true }),
+        supabase.from('character_history').select('*').eq('user_id', user.id).order('generation', { ascending: true }),
       ]);
 
       const speciesList = (speciesRes.data || []) as Species[];
@@ -45,6 +48,7 @@ export default function FamilyTreePage() {
       const { data: rawCharRows } = await supabase
         .from('characters')
         .select('*')
+        .eq('user_id', user.id)
         .eq('is_alive', true)
         .limit(1);
       const charRows = (rawCharRows || []) as CharRow[];

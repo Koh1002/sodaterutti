@@ -82,6 +82,7 @@ interface GameState {
   showMarriage: boolean;
   deathInfo: DeathInfo | null;
   isMarriageEligible: boolean;
+  needsNaming: boolean;
 
   // 統計（実績チェック用、セッション内カウント）
   sessionStats: {
@@ -140,6 +141,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   showMarriage: false,
   deathInfo: null,
   isMarriageEligible: false,
+  needsNaming: false,
   sessionStats: {
     feedCount: 0, cleanCount: 0, cureCount: 0,
     gamePlayCount: 0, gameWinCount: 0,
@@ -244,6 +246,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       evolutionInfo: null,
       showMarriage: false,
       isMarriageEligible: false,
+      needsNaming: !name,
     });
   },
 
@@ -692,7 +695,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const updated = await updateCharacter(character.id, { name });
     if (updated) {
-      set({ character: updated, message: `「${name}」と名付けました！` });
+      set({ character: updated, message: `「${name}」と名付けました！`, needsNaming: false });
     }
   },
 

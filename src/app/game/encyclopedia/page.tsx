@@ -21,10 +21,13 @@ export default function EncyclopediaPage() {
     const loadData = async () => {
       const supabase = createClient();
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
       const [speciesRes, historyRes, charRes] = await Promise.all([
         supabase.from('species').select('*').order('stage'),
-        supabase.from('character_history').select('*'),
-        supabase.from('characters').select('*').eq('is_alive', true),
+        supabase.from('character_history').select('*').eq('user_id', user.id),
+        supabase.from('characters').select('*').eq('user_id', user.id).eq('is_alive', true),
       ]);
 
       if (speciesRes.data) setAllSpecies(speciesRes.data as Species[]);

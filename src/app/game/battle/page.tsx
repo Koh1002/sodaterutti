@@ -102,25 +102,21 @@ export default function BattlePage() {
 
     if (data && data.length > 0) {
       const friendId = data[0].uid;
-      // フレンドのキャラクターを取得
+      // フレンドのキャラクターをRPC経由で取得（RLSバイパス）
       const { data: friendChar } = await supabase
-        .from('characters')
-        .select('*')
-        .eq('user_id', friendId)
-        .eq('is_alive', true)
-        .limit(1);
+        .rpc('get_friend_battle_character', { friend_user_id: friendId });
 
       if (friendChar && friendChar.length > 0) {
-        const fc = friendChar[0] as Database['public']['Tables']['characters']['Row'];
-        const friendSpecies = allSpecies.find(s => s.id === fc.species_id);
+        const fc = friendChar[0];
+        const friendSpecies = allSpecies.find(s => s.id === fc.cspecies_id);
         if (friendSpecies) {
           const friendStrength = calculateStrength({
-            discipline: fc.discipline,
-            care_miss_count: fc.care_miss_count,
-            weight: fc.weight,
+            discipline: fc.cdiscipline,
+            care_miss_count: fc.ccare_miss_count,
+            weight: fc.cweight,
             base_weight: friendSpecies.base_weight,
-            mini_game_total_score: fc.mini_game_total_score,
-            mini_game_play_count: fc.mini_game_play_count,
+            mini_game_total_score: fc.cmini_game_total_score,
+            mini_game_play_count: fc.cmini_game_play_count,
           });
 
           const player = createBattler(
@@ -129,9 +125,9 @@ export default function BattlePage() {
             strength, character.hunger, character.happiness,
           );
           const opp = createBattler(
-            fc.name || friendSpecies.name,
+            fc.cname || friendSpecies.name,
             friendSpecies.name, friendSpecies.image_key,
-            friendStrength, fc.hunger, fc.happiness,
+            friendStrength, fc.chunger, fc.chappiness,
           );
           setPlayerBattler(player);
           setOpponentBattler(opp);

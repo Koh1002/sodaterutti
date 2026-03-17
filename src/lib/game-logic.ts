@@ -188,9 +188,9 @@ export function feedAction(character: Character, foodType: 'onigiri' | 'bread' |
   }
 
   const effects: Record<string, { hunger: number; happiness: number; weight: number }> = {
-    onigiri: { hunger: 80, happiness: 0, weight: 2 },
-    bread: { hunger: 80, happiness: 0, weight: 2 },
-    cake: { hunger: 80, happiness: 5, weight: 5 },
+    onigiri: { hunger: 56, happiness: 0, weight: 2 },
+    bread: { hunger: 56, happiness: 0, weight: 2 },
+    cake: { hunger: 56, happiness: 5, weight: 5 },
   };
 
   const effect = effects[foodType];
@@ -222,7 +222,7 @@ export function snackAction(character: Character): ActionResult {
     success: true,
     message: 'おやつ大好き！',
     updates: {
-      hunger: clamp(character.hunger + 20, 0, 100),
+      hunger: clamp(character.hunger + 14, 0, 100),
       happiness: clamp(character.happiness + 10, 0, 100),
       weight: clamp(character.weight + 3, 1, 99),
       last_fed_at: new Date().toISOString(),

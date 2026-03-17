@@ -435,6 +435,21 @@ export interface Database {
         Args: { fc: string };
         Returns: { uid: string; uname: string }[];
       };
+      get_friend_battle_character: {
+        Args: { friend_user_id: string };
+        Returns: {
+          cid: string;
+          cname: string;
+          cspecies_id: string;
+          cdiscipline: number;
+          ccare_miss_count: number;
+          cweight: number;
+          cmini_game_total_score: number;
+          cmini_game_play_count: number;
+          chunger: number;
+          chappiness: number;
+        }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

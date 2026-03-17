@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/stores/game-store';
 import { GameHeader } from '@/components/game/GameHeader';
 import { CharacterDisplay } from '@/components/game/CharacterDisplay';
@@ -26,6 +26,7 @@ export default function GamePage() {
     marriageCandidates, showMarriage, isMarriageEligible,
     loadMarriageCandidates, marry, dismissMarriage,
     deathInfo, restartAfterDeath,
+    needsNaming, nameCharacter,
   } = useGameStore();
 
   const [currentHour, setCurrentHour] = useState(new Date().getHours());
@@ -74,6 +75,11 @@ export default function GamePage() {
 
   if (!character) {
     return <NewEggScreen />;
+  }
+
+  // 結婚・死亡後の新キャラクター名付け画面
+  if (needsNaming) {
+    return <NamingScreen onName={nameCharacter} />;
   }
 
   const bgGradient = getBackgroundPlaceholder(currentHour);
@@ -172,6 +178,57 @@ export default function GamePage() {
           />
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function NamingScreen({ onName }: { onName: (name: string) => Promise<void> }) {
+  const [name, setName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    await onName(name || '');
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-pink-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center space-y-6 w-full max-w-sm"
+      >
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', duration: 0.8 }}
+          className="text-8xl"
+        >
+          🎉
+        </motion.div>
+        <h2 className="text-2xl font-bold text-purple-600">
+          あたらしい子が生まれた！
+        </h2>
+        <p className="text-gray-500">
+          名前をつけてあげましょう
+        </p>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={30}
+          placeholder="名前を入力（省略可）"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none text-center"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full py-3 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-600 transition shadow-lg disabled:opacity-50"
+        >
+          {name ? `「${name}」に決定！` : 'スキップして始める'}
+        </button>
+      </motion.div>
     </div>
   );
 }

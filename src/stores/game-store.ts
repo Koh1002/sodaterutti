@@ -126,6 +126,10 @@ interface GameState {
   checkAchievements: () => Promise<void>;
 }
 
+// 排他制御用フラグ（ストア外に置くことで複数回呼び出しを防ぐ）
+let _isProcessingDeath = false;
+let _isProcessingEvolution = false;
+
 export const useGameStore = create<GameState>((set, get) => ({
   character: null,
   species: null,
@@ -200,10 +204,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       ? '00000000-0000-0000-0000-000000000001'
       : '00000000-0000-0000-0000-000000000002';
 
+    // 進化レコードを除外して、実際に世代を終えた（結婚・死亡）レコードから親を特定する
     const { data: history } = await supabase
       .from('character_history')
       .select('*')
       .eq('user_id', user.id)
+      .neq('cause_of_departure', 'evolution')
       .order('generation', { ascending: false })
       .limit(1);
 
@@ -268,13 +274,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       // 死亡チェック
       const deathResult = checkDeath(updated);
       if (deathResult.isDead && deathResult.cause) {
-        get().handleDeath();
+        await get().handleDeath();
         return;
       }
 
       // 進化チェック
       if (result.shouldCheckEvolution) {
-        get().checkEvolution();
+        await get().checkEvolution();
       }
     }
 
@@ -290,6 +296,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   // ===== 進化 =====
 
   checkEvolution: async () => {
+    if (_isProcessingEvolution) return;
+    _isProcessingEvolution = true;
+    try {
     const { character, species, allSpecies } = get();
     if (!character || !species) return;
     if (character.stage === 'adult') return; // アダルト期はこれ以上進化しない
@@ -349,6 +358,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
       get().checkAchievements();
     }
+    } finally {
+      _isProcessingEvolution = false;
+    }
   },
 
   completeEvolution: () => {
@@ -389,8 +401,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // 現在のキャラクターを歴史に記録
-    await supabase.from('character_history').insert({
+    // 現在のキャラクターを歴史に記録（失敗したらキャラを消さない）
+    const { error: historyError } = await supabase.from('character_history').insert({
       user_id: user.id,
       name: character.name || species.name,
       species_id: character.species_id,
@@ -405,7 +417,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       born_at: character.born_at,
     });
 
-    // 現在のキャラクターを非活性化
+    if (historyError) {
+      console.error('Failed to record marriage history:', historyError);
+      set({ message: '履歴の保存に失敗しました。もう一度試してください。' });
+      return;
+    }
+
+    // 履歴保存が成功してからキャラクターを非活性化
     await supabase
       .from('characters')
       .update({ is_alive: false })
@@ -453,6 +471,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   // ===== 死亡 =====
 
   handleDeath: async () => {
+    if (_isProcessingDeath) return;
+    _isProcessingDeath = true;
+    try {
     const { character, species } = get();
     if (!character || !species) return;
 
@@ -463,8 +484,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // 歴史に記録
-    await supabase.from('character_history').insert({
+    // 歴史に記録（失敗したらキャラを消さない）
+    const { error: historyError } = await supabase.from('character_history').insert({
       user_id: user.id,
       name: character.name || species.name,
       species_id: character.species_id,
@@ -478,7 +499,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       born_at: character.born_at,
     });
 
-    // キャラクターを非活性化
+    if (historyError) {
+      console.error('Failed to record death history:', historyError);
+      set({ message: '履歴の保存に失敗しました。もう一度試してください。' });
+      return;
+    }
+
+    // 履歴保存が成功してからキャラクターを非活性化
     await supabase
       .from('characters')
       .update({ is_alive: false })
@@ -495,6 +522,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       character: null,
       species: null,
     });
+    } finally {
+      _isProcessingDeath = false;
+    }
   },
 
   restartAfterDeath: () => {

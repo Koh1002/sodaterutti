@@ -1,12 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import PwaSetup from "@/components/PwaSetup";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "そだてるっち - キャラクター育成ゲーム",
   description: "かわいいキャラクターを育てて、進化させて、世代をつないでいく育成Webゲーム",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon-192.png",
     apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "そだてるっち",
   },
 };
 
@@ -15,6 +22,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#87CEEB",
 };
 
 export default function RootLayout({
@@ -26,6 +34,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className="antialiased">
         {children}
+        <PwaSetup />
       </body>
     </html>
   );

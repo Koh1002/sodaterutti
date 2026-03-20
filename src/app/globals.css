@@ -8,3 +8,18 @@ body {
   font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', 'Kosugi Maru', -apple-system, 'Hiragino Sans', 'Segoe UI', Meiryo, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

@@ -17,6 +17,7 @@ import { MarriageScreen } from '@/components/game/MarriageScreen';
 import { GraveScreen } from '@/components/game/GraveScreen';
 import { getBackgroundPlaceholder } from '@/lib/character-images';
 import { walkAction } from '@/lib/game-logic';
+import { checkStatNotifications } from '@/lib/stat-notifications';
 
 export default function GamePage() {
   const {
@@ -44,6 +45,15 @@ export default function GamePage() {
     const interval = setInterval(() => {
       recalculateStatus();
       setCurrentHour(new Date().getHours());
+      // ステータス低下時のプッシュ通知チェック
+      const current = useGameStore.getState().character;
+      if (current) {
+        checkStatNotifications({
+          hunger: current.hunger,
+          cleanliness: current.cleanliness,
+          happiness: current.happiness,
+        });
+      }
     }, 60000);
     return () => clearInterval(interval);
   }, [character, recalculateStatus]);

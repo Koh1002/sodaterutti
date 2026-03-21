@@ -7,6 +7,7 @@
 :root {
   --base-cream: #F5EBE0;
   --base-taupe: #E3D5CA;
+  --base-mocha: #D5BDAF;
   --muted-blue: #8E9AAF;
   --muted-sage: #B9BAA3;
 }
@@ -26,8 +27,8 @@ body {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
 }
@@ -35,28 +36,28 @@ body {
 /* グラスモーフィズム */
 .glass {
   background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .glass-warm {
-  background: rgba(245, 235, 224, 0.5);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  background: rgba(245, 235, 224, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .glass-dark {
   background: rgba(74, 74, 74, 0.3);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ボタン押し込みエフェクト */
 .press-effect {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.15s ease;
 }
 .press-effect:active {
   transform: scale(0.96) translateY(1px);
@@ -75,7 +76,28 @@ body {
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+  animation: slide-up 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* キラキラエフェクト */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes sparkle-float {
+  0% { opacity: 0; transform: translateY(0) scale(0); }
+  30% { opacity: 1; transform: translateY(-8px) scale(1); }
+  100% { opacity: 0; transform: translateY(-24px) scale(0.3); }
+}
+
+.sparkle-particle {
+  animation: sparkle-float 0.8s ease-out forwards;
+}
+
+/* キャラクターシャドウ */
+.character-shadow {
+  filter: drop-shadow(0 8px 12px rgba(74, 74, 74, 0.12));
 }
 
 /* セーフエリア対応 */
@@ -87,4 +109,10 @@ body {
 .font-num {
   font-family: 'Quicksand', 'Zen Maru Gothic', sans-serif;
   font-weight: 500;
+}
+
+/* パララックスレイヤー */
+.parallax-layer {
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }

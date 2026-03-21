@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { motion, useAnimation } from 'framer-motion';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
 import { MumbleDisplay } from './MumbleDisplay';
+import { SparkleEffect } from './SparkleEffect';
+import { useParallax } from '@/hooks/useParallax';
 import type { Database } from '@/types/database';
 
 type Character = Database['public']['Tables']['characters']['Row'];
@@ -26,12 +28,26 @@ const touchReactions = [
 
 export function CharacterDisplay({ character, species, onTap }: CharacterDisplayProps) {
   const [imgError, setImgError] = useState(false);
+  const [showSparkle, setShowSparkle] = useState(false);
   const reactingRef = useRef(false);
+  const prevHappinessRef = useRef(character.happiness);
   const controls = useAnimation();
+  const parallax = useParallax(6);
   const imageKey = species?.image_key || 'baby_boy';
   const imageSrc = imgError
     ? getPlaceholderSvg(imageKey)
     : getCharacterImagePath(imageKey);
+
+  // ステータス回復検知 → キラキラ発火
+  useEffect(() => {
+    if (character.happiness > prevHappinessRef.current) {
+      setShowSparkle(true);
+      const timer = setTimeout(() => setShowSparkle(false), 1200);
+      prevHappinessRef.current = character.happiness;
+      return () => clearTimeout(timer);
+    }
+    prevHappinessRef.current = character.happiness;
+  }, [character.happiness]);
 
   const getIdleAnimation = useCallback(() => {
     if (character.is_sleeping) {
@@ -87,21 +103,33 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
         </span>
       </div>
 
-      {/* 部屋の背景 + キャラクター */}
+      {/* 部屋の背景 + キャラクター（パララックス対応） */}
       <div className="relative w-full max-w-sm aspect-[3/2] rounded-3xl overflow-hidden shadow-soft border border-white/30">
-        <Image
-          src="/images/bg_room.png"
-          alt="部屋"
-          fill
-          className="object-cover"
-          priority
-        />
+        {/* 背景レイヤー（パララックス） */}
+        <div
+          className="absolute inset-[-8px] parallax-layer"
+          style={{ transform: `translate(${parallax.x * 0.5}px, ${parallax.y * 0.5}px)` }}
+        >
+          <Image
+            src="/images/bg_room.png"
+            alt="部屋"
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
 
-        {/* キャラクター画像 */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        {/* キャラクター画像（パララックス：背景と逆方向に微妙に動く） */}
+        <div
+          className="absolute inset-0 flex items-center justify-center parallax-layer"
+          style={{ transform: `translate(${parallax.x * -0.3}px, ${parallax.y * -0.3}px)` }}
+        >
+          {/* キャラの影（地面に楕円で落ちる） */}
+          <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-24 h-4 bg-black/8 rounded-[100%] blur-[3px]" />
+
           <motion.div
             animate={controls}
-            className="relative w-40 h-40 cursor-pointer"
+            className="relative w-40 h-40 cursor-pointer character-shadow"
             onClick={handleTap}
           >
             <Image
@@ -110,9 +138,12 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
               width={160}
               height={160}
               onError={() => setImgError(true)}
-              className="object-contain drop-shadow-md"
+              className="object-contain"
               priority
             />
+
+            {/* キラキラエフェクト */}
+            <SparkleEffect active={showSparkle} />
 
             {character.is_sleeping && (
               <motion.span

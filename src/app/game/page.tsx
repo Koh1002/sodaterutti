@@ -113,19 +113,29 @@ export default function GamePage() {
       />
       <MessageToast />
 
-      {/* メインコンテンツ - キャラ表示が画面の大部分を占める */}
-      <main className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full px-4 pb-36">
+      {/* メインコンテンツ */}
+      <main className="flex-1 flex flex-col items-center max-w-lg mx-auto w-full px-4 pt-1 pb-44">
         {/* キャラクター表示エリア */}
         <div className="flex-1 flex items-center justify-center w-full">
           <CharacterDisplay character={character} species={species} />
         </div>
 
+        {/* 体重・しつけ・ステージ情報 */}
+        <div className="flex flex-wrap justify-center gap-2 mt-2">
+          <span className="bg-black/15 backdrop-blur-sm text-white text-sm font-semibold px-3.5 py-1.5 rounded-full shadow-sm">
+            体重 {character.weight}g
+          </span>
+          <span className="bg-black/15 backdrop-blur-sm text-white text-sm font-semibold px-3.5 py-1.5 rounded-full shadow-sm">
+            しつけ {character.discipline}/100
+          </span>
+        </div>
+
         {/* 結婚適齢期の通知 */}
         {isMarriageEligible && (
-          <div className="w-full mt-2">
+          <div className="w-full mt-3">
             <button
               onClick={() => loadMarriageCandidates()}
-              className="w-full py-3 bg-white/80 backdrop-blur-md text-pink-500 font-bold rounded-2xl shadow-sm hover:bg-white/90 transition flex items-center justify-center gap-2 text-sm border border-pink-200/50"
+              className="w-full py-3.5 bg-white/85 backdrop-blur-md text-pink-500 font-bold rounded-2xl shadow-sm hover:bg-white/95 active:scale-[0.98] transition flex items-center justify-center gap-2 text-base border border-pink-200/50"
             >
               <span>💒</span>
               <span>結婚できるよ！</span>
@@ -133,16 +143,6 @@ export default function GamePage() {
             </button>
           </div>
         )}
-
-        {/* 体重・しつけ（コンパクト表示） */}
-        <div className="flex gap-3 mt-3">
-          <span className="bg-white/30 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
-            体重 {character.weight}g
-          </span>
-          <span className="bg-white/30 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
-            しつけ {character.discipline}
-          </span>
-        </div>
       </main>
 
       {/* ボトムドック（固定位置・ActionButtons内で描画） */}

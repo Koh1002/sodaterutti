@@ -26,29 +26,29 @@ export function StatusBar({ label, value, maxValue = 100, color, icon }: StatusB
 }
 
 /** コンパクトなステータスインジケーター（ボトムドック上に表示） */
-export function CompactStatus({ icon, value, color }: { icon: string; value: number; color: string }) {
-  const percentage = Math.round((value / 100) * 100);
-  const radius = 16;
+export function CompactStatus({ icon, value, label, color }: { icon: string; value: number; label: string; color: string }) {
+  const radius = 18;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percentage / 100) * circumference;
+  const offset = circumference - (value / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <div className="relative w-10 h-10 flex items-center justify-center">
+    <div className="flex flex-col items-center">
+      <div className="relative w-12 h-12 flex items-center justify-center">
         {/* 背景リング */}
-        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 40 40">
-          <circle cx="20" cy="20" r={radius} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="3.5" />
           <circle
-            cx="20" cy="20" r={radius} fill="none"
-            stroke={color} strokeWidth="3"
+            cx="22" cy="22" r={radius} fill="none"
+            stroke={color} strokeWidth="3.5"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
             className="transition-all duration-500"
           />
         </svg>
-        <span className="text-sm">{icon}</span>
+        <span className="text-base leading-none">{icon}</span>
       </div>
+      <span className="text-[10px] text-gray-500 font-medium mt-0.5">{label}</span>
     </div>
   );
 }

@@ -58,54 +58,6 @@ function BottomSheet({
   );
 }
 
-// サブアクションメニュー（上に飛び出すポップアップ）
-function SubActionMenu({
-  isOpen,
-  onClose,
-  actions,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  actions: { icon: string; label: string; onClick: () => void; disabled?: boolean }[];
-}) {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100 p-2 flex gap-1"
-          >
-            {actions.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => { if (!action.disabled) { action.onClick(); onClose(); } }}
-                disabled={action.disabled}
-                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition ${
-                  action.disabled ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 active:bg-gray-200'
-                }`}
-              >
-                <span className="text-xl">{action.icon}</span>
-                <span className="text-[10px] text-gray-600 font-medium">{action.label}</span>
-              </button>
-            ))}
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
 export function ActionButtons({ onWalk }: ActionButtonsProps) {
   const { character, feed, giveSnack, clean, cure, discipline, pet, toggleSleep, playMiniGame, setMessage } = useGameStore();
   const [showFoodMenu, setShowFoodMenu] = useState(false);
@@ -126,51 +78,52 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
     setTimeout(() => setPetCooldown(false), 2 * 60 * 1000);
   };
 
+  const closeAll = () => { setShowFoodMenu(false); setShowGameMenu(false); setShowMoreMenu(false); };
+
   // メイン5つのドックアクション
   const dockActions = [
     {
       icon: '🍚',
       label: 'ごはん',
-      onClick: () => { setShowFoodMenu(true); setShowGameMenu(false); setShowMoreMenu(false); },
+      onClick: () => { closeAll(); setShowFoodMenu(true); },
       disabled: character.is_sleeping,
       active: showFoodMenu,
     },
     {
       icon: '🎮',
       label: 'あそぶ',
-      onClick: () => { setShowGameMenu(true); setShowFoodMenu(false); setShowMoreMenu(false); },
+      onClick: () => { closeAll(); setShowGameMenu(true); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 10,
       active: showGameMenu,
     },
     {
       icon: '👟',
       label: 'さんぽ',
-      onClick: () => { setShowFoodMenu(false); setShowGameMenu(false); setShowMoreMenu(false); onWalk(); },
+      onClick: () => { closeAll(); onWalk(); },
       disabled: character.is_sleeping || character.is_sick || character.stamina < 15,
       active: false,
     },
     {
       icon: '🧹',
       label: 'おそうじ',
-      onClick: () => { clean(); setShowFoodMenu(false); setShowGameMenu(false); setShowMoreMenu(false); },
+      onClick: () => { closeAll(); clean(); },
       disabled: character.is_sleeping || character.cleanliness >= 100,
       active: false,
     },
     {
-      icon: '•••',
-      label: 'その他',
-      onClick: () => { setShowMoreMenu(!showMoreMenu); setShowFoodMenu(false); setShowGameMenu(false); },
+      icon: character.is_sleeping ? '☀️' : '🌙',
+      label: character.is_sleeping ? '起こす' : 'ねる',
+      onClick: () => { closeAll(); toggleSleep(); },
       disabled: false,
-      active: showMoreMenu,
+      active: false,
     },
   ];
 
-  // 「その他」メニューの中身
+  // 「その他」メニュー（サブアクション）
   const moreActions = [
     { icon: '🤚', label: 'なでる', onClick: handlePet, disabled: character.is_sleeping || petCooldown },
     { icon: '💊', label: '治療', onClick: () => cure(), disabled: !character.is_sick },
     { icon: '👆', label: 'しつけ', onClick: () => discipline(), disabled: character.is_sleeping },
-    { icon: character.is_sleeping ? '☀️' : '🌙', label: character.is_sleeping ? '起こす' : 'ねる', onClick: () => toggleSleep(), disabled: false },
   ];
 
   const miniGames = [
@@ -197,64 +150,94 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
   return (
     <>
-      {/* ボトムドック */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 pb-safe">
+      {/* ===== ボトムドック（固定） ===== */}
+      <div className="fixed bottom-0 left-0 right-0 z-30">
         <div className="max-w-lg mx-auto">
           {/* コンパクトステータス表示 */}
-          <div className="flex justify-center gap-3 px-4 mb-2">
-            <CompactStatus icon="🍔" value={character.hunger} color="#fb923c" />
-            <CompactStatus icon="💕" value={character.happiness} color="#f472b6" />
-            <CompactStatus icon="💪" value={character.stamina} color="#4ade80" />
-            <CompactStatus icon="✨" value={character.cleanliness} color="#60a5fa" />
+          <div className="flex justify-center gap-4 px-4 pb-1.5">
+            <CompactStatus icon="🍔" value={character.hunger} label="お腹" color="#fb923c" />
+            <CompactStatus icon="💕" value={character.happiness} label="気持ち" color="#f472b6" />
+            <CompactStatus icon="💪" value={character.stamina} label="体力" color="#4ade80" />
+            <CompactStatus icon="✨" value={character.cleanliness} label="清潔" color="#60a5fa" />
             {character.is_sick && (
-              <div className="flex items-center">
-                <span className="text-sm animate-pulse">🤒</span>
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-xl animate-pulse">🤒</span>
+                <span className="text-[10px] text-red-500 font-bold mt-0.5">病気</span>
               </div>
             )}
           </div>
 
-          {/* ドックバー */}
-          <div className="bg-white/90 backdrop-blur-xl border-t border-gray-200/50 px-2 pt-2 pb-2">
-            <div className="flex items-end justify-around max-w-sm mx-auto relative">
-              {dockActions.map((action, i) => (
-                <div key={action.label} className="relative">
-                  {/* 「その他」のサブメニュー */}
-                  {i === 4 && (
-                    <SubActionMenu
-                      isOpen={showMoreMenu}
-                      onClose={() => setShowMoreMenu(false)}
-                      actions={moreActions}
-                    />
-                  )}
-                  <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    onClick={action.onClick}
-                    disabled={action.disabled}
-                    className={`flex flex-col items-center gap-0.5 w-16 py-1.5 rounded-2xl transition-all ${
-                      action.disabled
-                        ? 'opacity-30 cursor-not-allowed'
-                        : action.active
-                          ? 'bg-purple-50'
-                          : 'hover:bg-gray-50 active:bg-gray-100'
-                    }`}
-                  >
-                    <span className={`text-2xl transition-transform ${action.active ? 'scale-110' : ''}`}>
-                      {action.icon}
-                    </span>
-                    <span className={`text-[10px] font-medium transition-colors ${
-                      action.active ? 'text-purple-600' : 'text-gray-500'
-                    }`}>
-                      {action.label}
-                    </span>
-                  </motion.button>
-                </div>
+          {/* ドックバー本体 */}
+          <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200/60 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
+            <div className="flex items-center justify-around max-w-md mx-auto px-2 pt-1.5 pb-safe">
+              {dockActions.map((action) => (
+                <motion.button
+                  key={action.label}
+                  whileTap={{ scale: 0.88 }}
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                  className={`flex flex-col items-center justify-center min-w-[56px] min-h-[52px] py-1 px-2 rounded-2xl transition-all ${
+                    action.disabled
+                      ? 'opacity-30 cursor-not-allowed'
+                      : action.active
+                        ? 'bg-purple-100'
+                        : 'active:bg-gray-100'
+                  }`}
+                >
+                  <span className={`text-[26px] leading-none transition-transform ${action.active ? 'scale-110' : ''}`}>
+                    {action.icon}
+                  </span>
+                  <span className={`text-[11px] font-semibold mt-0.5 transition-colors ${
+                    action.active ? 'text-purple-600' : 'text-gray-500'
+                  }`}>
+                    {action.label}
+                  </span>
+                </motion.button>
               ))}
+              {/* その他ボタン */}
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                onClick={() => { closeAll(); setShowMoreMenu(true); }}
+                className={`flex flex-col items-center justify-center min-w-[56px] min-h-[52px] py-1 px-2 rounded-2xl transition-all ${
+                  showMoreMenu ? 'bg-purple-100' : 'active:bg-gray-100'
+                }`}
+              >
+                <span className="text-[22px] leading-none text-gray-400 font-bold">•••</span>
+                <span className={`text-[11px] font-semibold mt-0.5 ${
+                  showMoreMenu ? 'text-purple-600' : 'text-gray-500'
+                }`}>
+                  その他
+                </span>
+              </motion.button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 食事メニュー */}
+      {/* ===== その他メニュー（BottomSheet形式で安全に表示） ===== */}
+      <BottomSheet
+        isOpen={showMoreMenu}
+        onClose={() => setShowMoreMenu(false)}
+        title="その他のアクション"
+      >
+        <div className="grid grid-cols-3 gap-3">
+          {moreActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => { if (!action.disabled) { action.onClick(); setShowMoreMenu(false); } }}
+              disabled={action.disabled}
+              className={`flex flex-col items-center py-4 rounded-2xl transition ${
+                action.disabled ? 'opacity-30 cursor-not-allowed bg-gray-50' : 'bg-gray-50 hover:bg-gray-100 active:bg-gray-200'
+              }`}
+            >
+              <span className="text-3xl">{action.icon}</span>
+              <span className="text-sm text-gray-700 font-medium mt-1.5">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      {/* ===== 食事メニュー ===== */}
       <BottomSheet
         isOpen={showFoodMenu}
         onClose={() => setShowFoodMenu(false)}
@@ -285,7 +268,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
         </div>
       </BottomSheet>
 
-      {/* ミニゲーム選択 */}
+      {/* ===== ミニゲーム選択 ===== */}
       <BottomSheet
         isOpen={showGameMenu}
         onClose={() => setShowGameMenu(false)}
@@ -313,7 +296,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
         </div>
       </BottomSheet>
 
-      {/* ミニゲーム: じゃんけん */}
+      {/* ===== ミニゲーム ===== */}
       <AnimatePresence>
         {activeGame === 'janken' && (
           <MiniGameJanken
@@ -322,7 +305,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           />
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {activeGame === 'memory' && (
           <MiniGameMemory
@@ -331,7 +313,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           />
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {activeGame === 'rhythm' && (
           <MiniGameRhythm
@@ -340,7 +321,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           />
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {activeGame === 'quiz' && (
           <MiniGameQuiz
@@ -349,7 +329,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           />
         )}
       </AnimatePresence>
-
       <AnimatePresence>
         {activeGame === 'whack' && (
           <MiniGameWhack
@@ -432,11 +411,9 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
         <h3 className="text-xl font-bold text-center text-purple-600 mb-4">
           じゃんけんゲーム
         </h3>
-
         <p className="text-center text-sm text-gray-500 mb-4">
           {gameOver ? '結果発表！' : `${round + 1}/3 ラウンド`}
         </p>
-
         {playerHand && cpuHand && (
           <div className="flex items-center justify-center gap-6 mb-4">
             <div className="text-center">
@@ -450,7 +427,6 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
             </div>
           </div>
         )}
-
         {roundResult && (
           <p className={`text-center text-lg font-bold mb-4 ${
             roundResult === '勝ち！' ? 'text-green-500' :
@@ -460,7 +436,6 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
             {roundResult}
           </p>
         )}
-
         {!gameOver ? (
           <div className="flex justify-center gap-4">
             {hands.map((hand) => (
@@ -490,7 +465,6 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
             </button>
           </div>
         )}
-
         <div className="mt-4 flex justify-center gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <div

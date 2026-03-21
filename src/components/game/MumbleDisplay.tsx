@@ -46,7 +46,7 @@ export function MumbleDisplay() {
           className="relative glass rounded-xl px-3 py-1.5 shadow-soft max-w-[200px]"
         >
           <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[rgba(255,255,255,0.4)] border-t border-l border-white/60 rotate-45" />
-          <p className="text-[10px] text-text-secondary text-center relative z-10 tracking-relaxed">{mumble}</p>
+          <p className="text-[10px] text-[#2A2725] text-center relative z-10 tracking-relaxed">{mumble}</p>
         </motion.div>
       )}
     </AnimatePresence>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
 import type { Database } from '@/types/database';
 
 type CharacterHistory = Database['public']['Tables']['character_history']['Row'];
@@ -10,12 +11,13 @@ type Species = Database['public']['Tables']['species']['Row'];
 
 interface HistoryWithSpecies extends CharacterHistory {
   speciesName: string;
+  imageKey: string;
 }
 
 export default function FamilyTreePage() {
   const router = useRouter();
   const [history, setHistory] = useState<HistoryWithSpecies[]>([]);
-  const [currentChar, setCurrentChar] = useState<{ name: string; speciesName: string; generation: number } | null>(null);
+  const [currentChar, setCurrentChar] = useState<{ name: string; speciesName: string; generation: number; imageKey: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,13 +35,17 @@ export default function FamilyTreePage() {
       const speciesList = (speciesRes.data || []) as Species[];
       const historyList = (historyRes.data || []) as CharacterHistory[];
 
-      const speciesMap = new Map<string, string>();
-      speciesList.forEach((s) => speciesMap.set(s.id, s.name));
+      const speciesMap = new Map<string, Species>();
+      speciesList.forEach((s) => speciesMap.set(s.id, s));
 
-      const historyWithNames: HistoryWithSpecies[] = historyList.map((h) => ({
-        ...h,
-        speciesName: speciesMap.get(h.species_id) || '不明',
-      }));
+      const historyWithNames: HistoryWithSpecies[] = historyList.map((h) => {
+        const sp = speciesMap.get(h.species_id);
+        return {
+          ...h,
+          speciesName: sp?.name || '不明',
+          imageKey: sp?.image_key || '',
+        };
+      });
 
       setHistory(historyWithNames);
 
@@ -55,11 +61,12 @@ export default function FamilyTreePage() {
 
       if (charRows.length > 0) {
         const c = charRows[0];
-        const speciesName = speciesMap.get(c.species_id) || '不明';
+        const sp = speciesMap.get(c.species_id);
         setCurrentChar({
-          name: c.name || speciesName,
-          speciesName,
+          name: c.name || sp?.name || '不明',
+          speciesName: sp?.name || '不明',
           generation: c.generation,
+          imageKey: sp?.image_key || '',
         });
       }
 
@@ -114,8 +121,14 @@ export default function FamilyTreePage() {
             {/* 過去のキャラクター */}
             {history.map((h) => (
               <div key={h.id} className="relative flex items-start gap-4 mb-6">
-                <div className="relative z-10 w-12 h-12 bg-white border-2 border-green-300 rounded-full flex items-center justify-center text-lg shrink-0">
-                  {h.gender === 'male' ? '👦' : '👧'}
+                <div className="relative z-10 w-12 h-12 bg-white border-2 border-green-300 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={h.imageKey ? getCharacterImagePath(h.imageKey) : getPlaceholderSvg(h.gender === 'male' ? 'baby_boy' : 'baby_girl', 48)}
+                    alt={h.speciesName}
+                    className="w-10 h-10 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(h.imageKey || 'egg_normal', 48); }}
+                  />
                 </div>
                 <div className="bg-white rounded-xl p-3 shadow-sm flex-1 mt-1">
                   <div className="flex items-center justify-between">
@@ -133,8 +146,14 @@ export default function FamilyTreePage() {
             {/* 現在のキャラクター */}
             {currentChar && (
               <div className="relative flex items-start gap-4">
-                <div className="relative z-10 w-12 h-12 bg-purple-100 border-2 border-purple-400 rounded-full flex items-center justify-center text-lg shrink-0 animate-pulse">
-                  🐣
+                <div className="relative z-10 w-12 h-12 bg-purple-100 border-2 border-purple-400 rounded-full flex items-center justify-center shrink-0 overflow-hidden animate-pulse">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={currentChar.imageKey ? getCharacterImagePath(currentChar.imageKey) : getPlaceholderSvg('egg_normal', 48)}
+                    alt={currentChar.speciesName}
+                    className="w-10 h-10 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(currentChar.imageKey || 'egg_normal', 48); }}
+                  />
                 </div>
                 <div className="bg-purple-50 rounded-xl p-3 shadow-sm flex-1 mt-1 border border-purple-200">
                   <div className="flex items-center justify-between">

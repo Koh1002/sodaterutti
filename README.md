@@ -1,36 +1,275 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# そだてるっち
 
-## Getting Started
+かわいいキャラクターを育てて、進化させて、世代をつないでいく育成 Web ゲーム（PWA）。
 
-First, run the development server:
+**URL:** [sodaterutti.vercel.app](https://sodaterutti.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 技術スタック
+
+| カテゴリ | 技術 |
+|---|---|
+| フレームワーク | Next.js 14 (App Router) |
+| 言語 | TypeScript |
+| スタイリング | Tailwind CSS + カスタム CSS |
+| アニメーション | Framer Motion |
+| 状態管理 | Zustand |
+| バックエンド / DB | Supabase (Auth, Database, Realtime) |
+| デプロイ | Vercel |
+| PWA | Web App Manifest + Service Worker |
+
+## 機能一覧
+
+### 育成システム
+
+- **たまご孵化** - 新しいたまごを受け取り、名前を付けて育成開始
+- **成長ステージ** - ベビー期 → キッズ期 → ヤング期 → アダルト期の 4 段階
+- **パラメータ管理** - お腹・きもち・体力・清潔の 4 つのステータスが時間経過で自然減少
+- **体重・しつけ** - ごはんやしつけで変動し、進化先の分岐条件に影響
+
+### お世話アクション
+
+| アクション | 説明 |
+|---|---|
+| ごはん | おにぎり・パン・ケーキから選択。お腹と体重が回復 |
+| おやつ | クッキーをあげる。お腹は少し回復、しつけ下がりやすい |
+| あそぶ | ミニゲームで遊んできもちを回復 |
+| さんぽ | ランダムイベント発生。きもち・体力に影響 |
+| おそうじ | 清潔さを回復 |
+| ねる / 起こす | 睡眠中は体力が回復、パラメータ減少が半減 |
+| なでる | きもちが少し回復（クールダウンあり） |
+| 治療 | 病気を治す |
+| しつけ | しつけ値を上げる |
+
+### ミニゲーム（5 種類）
+
+| ゲーム | 内容 |
+|---|---|
+| じゃんけん | 3 回勝負のじゃんけん |
+| 神経衰弱 | カードを合わせる記憶ゲーム |
+| リズム | タイミングに合わせてタップ |
+| クイズ | 知識を試すクイズ |
+| もぐらたたき | 出てくるもぐらをタップ |
+
+各ゲームにはクールダウン（20〜30 分）があり、スコアに応じてきもちが回復します。
+
+### 進化システム
+
+- お世話の質（ケアスコア）に基づいて進化先が分岐
+- ケアスコアはしつけ値・ケアミス回数・体重・ミニゲーム成績から算出
+- 進化時は演出アニメーション付き
+- 全 20 種以上のキャラクター
+
+### 結婚・世代交代
+
+- アダルト期になると結婚が可能に
+- NPC の候補者リストから相手を選択
+- 結婚すると次世代のたまごが生まれ、世代をつなぐ
+- 遺伝子（gene）システムで親の特性が次世代に引き継がれる
+
+### 寿命・死亡
+
+- キャラクターには寿命があり、病気や加齢で旅立つことがある
+- お墓画面で思い出を振り返り、新しいたまごで再スタート
+
+### おさんぽ
+
+ランダムイベントが発生するおさんぽ機能。イベントにはレアリティがあります:
+
+- **Common（70%）** - お花畑発見、ちょうちょを追いかけた、など
+- **Uncommon（25%）** - おやつを見つけた、友達に出会った、など
+- **Rare（5%）** - レア度の高い特別イベント
+
+### バトルシステム
+
+- **CPU 対戦** - 難易度を選んで CPU と戦闘
+- **フレンド対戦** - フレンドコードでチャレンジを送信、非同期バトル
+- **60 種の技** - 威力技 45 種 + 状態異常技 15 種
+- **状態異常** - 毒・やけど・まひ・混乱・眠りの 5 種類
+- **戦闘力** - しつけ・ケアミス・体重・ミニゲーム成績から算出
+
+### 協力プレイ（Co-op）
+
+- ルームコードで友達と接続（Supabase Realtime）
+- 2 人で協力して制限時間内にターゲットスコアを目指すタップゲーム
+- リアルタイムスコア同期
+
+### デイリーミッション
+
+毎日 3 つのミッションがランダム生成:
+
+- お世話系（ごはん・そうじ・しつけ）
+- ミニゲーム系（プレイ回数・勝利回数）
+- おさんぽ系
+- 複合系（お世話を合計 N 回）
+
+達成するとパラメータ回復のボーナス報酬を獲得。
+
+### 実績（アチーブメント）
+
+カテゴリ別の実績をアンロック。進捗を確認できるパネル付き。
+
+### ずかん（図鑑）
+
+発見したキャラクターを一覧で確認。未発見のキャラはシルエット表示。
+
+### 家系図
+
+歴代のキャラクターと世代のつながりを確認できるファミリーツリー。
+
+### プッシュ通知
+
+ステータスが低下（30% 以下）すると通知でお知らせ:
+
+- 「お腹が空いてピンチ！ご飯をあげよう」
+- 「掃除はいかが？」
+- 「もう飽きちゃった、、？」
+
+### つぶやき
+
+キャラクターの状態や時間帯に応じて、ランダムなセリフを表示。睡眠中・病気中・空腹時など状況ごとにメッセージが変化します。
+
+## UI / UX
+
+### デザインコンセプト
+
+「大人可愛い」ライフスタイルアプリ風の UI。20 代女性をメインターゲットに、くすみカラーとグラスモーフィズムを基調としたデザイン。
+
+### カラーパレット
+
+| 名前 | 色 | 用途 |
+|---|---|---|
+| Cream | `#F5EBE0` | 背景 |
+| Taupe | `#E3D5CA` | カード背景 |
+| Mocha | `#D5BDAF` | アクセント |
+| Muted Blue | `#8E9AAF` | リンク・アクティブ状態 |
+| Muted Sage | `#B9BAA3` | 成功表示 |
+| Muted Rose | `#C4A4A7` | 警告・病気 |
+
+### フォント
+
+- **本文:** Zen Maru Gothic（丸ゴシック）
+- **数字・欧文:** Quicksand
+
+### インタラクション
+
+- **ぷにっとタップフィードバック** - `active:scale(0.94)` + spring アニメーション
+- **タップハイライト消去** - `-webkit-tap-highlight-color: transparent`
+- **テキスト選択防止** - `select-none` で誤操作防止
+- **ズーム防止** - `touch-action: manipulation`
+- **PC ホバー** - `@media (hover: hover)` でマウスデバイスのみ
+
+### ビジュアルエフェクト
+
+- **グラスモーフィズム** - 半透明すりガラス風カード
+- **パララックス** - デバイスの傾きに連動する背景とキャラクターの動き
+- **キラキラエフェクト** - ステータス回復時のスパークル演出
+- **キャラクターリアクション** - タップするとジャンプ・回転・ぷるぷるなど 5 種のランダム反応
+- **ノイズテクスチャ** - 画面全体にかかる微細な質感オーバーレイ
+- **夜間モード** - 20:00〜6:00 に自動切替、色調が変化
+
+### ローディング画面
+
+たまごがトコトコ歩くアニメーション + ランダムな柔らかいメッセージ（「ちょっとまってね」「おめかし中…」など）。読み込み完了時にふわっとフェードアウト。
+
+### レスポンシブ
+
+- モバイルファースト設計
+- PC 表示時は下部メニューの間隔・最大幅を自動調整
+- `md` ブレイクポイントでドックの `max-w` を制限
+
+## 時間帯による背景変化
+
+| 時間帯 | 背景 |
+|---|---|
+| 6:00 - 11:59 | 朝（bg_morning.png） |
+| 12:00 - 16:59 | 昼（bg_afternoon.png） |
+| 17:00 - 19:59 | 夕方（bg_evening.png） |
+| 20:00 - 5:59 | 夜（bg_night.png） |
+
+## プロジェクト構成
+
+```
+src/
+├── app/
+│   ├── page.tsx                 # トップページ
+│   ├── layout.tsx               # ルートレイアウト（PWA設定）
+│   ├── globals.css              # グローバルCSS
+│   ├── auth/
+│   │   ├── login/page.tsx       # ログイン
+│   │   └── register/page.tsx    # ユーザー登録
+│   └── game/
+│       ├── page.tsx             # メインゲーム画面
+│       ├── battle/page.tsx      # バトル（CPU/フレンド/Co-op）
+│       ├── encyclopedia/page.tsx # ずかん
+│       └── family-tree/page.tsx # 家系図
+├── components/game/
+│   ├── ActionButtons.tsx        # 下部アクションドック + BottomSheet
+│   ├── CharacterDisplay.tsx     # キャラクター表示（パララックス・リアクション）
+│   ├── StatusBar.tsx            # ステータスバー
+│   ├── GameHeader.tsx           # ヘッダー（メニュー・ミッション）
+│   ├── MumbleDisplay.tsx        # つぶやき表示
+│   ├── MessageToast.tsx         # メッセージトースト
+│   ├── LoadingScreen.tsx        # ローディング画面
+│   ├── NewEggScreen.tsx         # たまご孵化演出
+│   ├── EvolutionScreen.tsx      # 進化演出
+│   ├── MarriageScreen.tsx       # 結婚画面
+│   ├── GraveScreen.tsx          # お墓画面
+│   ├── WalkScreen.tsx           # おさんぽ画面
+│   ├── DailyMissionPanel.tsx    # デイリーミッション
+│   ├── AchievementPanel.tsx     # 実績パネル
+│   ├── BattleScreen.tsx         # バトル戦闘画面
+│   ├── ChallengePanel.tsx       # チャレンジ管理
+│   ├── CoopGameScreen.tsx       # 協力プレイ画面
+│   ├── MiniGameMemory.tsx       # 神経衰弱
+│   ├── MiniGameQuiz.tsx         # クイズ
+│   ├── MiniGameRhythm.tsx       # リズムゲーム
+│   ├── MiniGameWhack.tsx        # もぐらたたき
+│   ├── SparkleEffect.tsx        # キラキラエフェクト
+│   └── AlbumFrame.tsx           # アルバムフレーム
+├── lib/
+│   ├── game-logic.ts            # ゲームコアロジック（時間経過・進化判定・死亡判定）
+│   ├── battle-logic.ts          # バトル計算（60種の技・ダメージ計算）
+│   ├── challenge-logic.ts       # 非同期バトルチャレンジ
+│   ├── coop-logic.ts            # 協力プレイ（Supabase Realtime）
+│   ├── daily-missions.ts        # デイリーミッション生成
+│   ├── walk-events.ts           # おさんぽイベント定義
+│   ├── mumble.ts                # つぶやきメッセージ
+│   ├── character-images.ts      # 画像パス管理・プレースホルダー
+│   ├── stat-notifications.ts    # プッシュ通知
+│   └── supabase/                # Supabase クライアント設定
+├── stores/
+│   └── game-store.ts            # Zustand ストア（全ゲーム状態管理）
+├── hooks/
+│   └── useParallax.ts           # パララックス用カスタムフック
+└── types/
+    └── database.ts              # Supabase DB 型定義
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## セットアップ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 必要な環境変数
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-## Learn More
+### 開発サーバー起動
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+http://localhost:3000 でアクセスできます。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### ビルド
 
-## Deploy on Vercel
+```bash
+npm run build
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ライセンス
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Private

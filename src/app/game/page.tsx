@@ -114,7 +114,7 @@ export default function GamePage() {
       <MessageToast />
 
       {/* メインコンテンツ */}
-      <main className="flex-1 flex flex-col items-center max-w-lg mx-auto w-full px-4 pt-1 pb-44">
+      <main className="flex-1 flex flex-col items-center max-w-lg mx-auto w-full px-4 pt-1 pb-56">
         {/* キャラクター表示エリア */}
         <div className="flex-1 flex items-center justify-center w-full">
           <CharacterDisplay character={character} species={species} />

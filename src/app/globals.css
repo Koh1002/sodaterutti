@@ -116,3 +116,31 @@ body {
   will-change: transform;
   transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* ========== 夜間モード ========== */
+[data-night="true"] {
+  --text-primary-night: #E8E0D8;
+  --text-secondary-night: #C8BFB5;
+  --text-tertiary-night: #A89E94;
+}
+
+[data-night="true"] .glass {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-night="true"] .glass-warm {
+  background: rgba(245, 235, 224, 0.12);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* テキスト色の夜間オーバーライド */
+[data-night="true"] .text-text-primary {
+  color: var(--text-primary-night) !important;
+}
+[data-night="true"] .text-text-secondary {
+  color: var(--text-secondary-night) !important;
+}
+[data-night="true"] .text-text-tertiary {
+  color: var(--text-tertiary-night) !important;
+}

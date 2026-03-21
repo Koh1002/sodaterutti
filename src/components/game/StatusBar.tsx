@@ -32,15 +32,15 @@ export function CompactStatus({ icon, value, label, color }: { icon: string; val
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <span className="text-xs leading-none opacity-50">{icon}</span>
+      <span className="text-xs leading-none text-text-tertiary">{icon}</span>
       <div className="flex gap-[3px]">
         {Array.from({ length: dots }).map((_, i) => (
           <div
             key={i}
             className="w-[5px] h-[5px] rounded-full transition-all duration-500"
             style={{
-              backgroundColor: i < filledDots ? color : 'rgba(0,0,0,0.06)',
-              opacity: i < filledDots ? 0.8 : 0.3,
+              backgroundColor: i < filledDots ? color : 'rgba(128,128,128,0.2)',
+              opacity: i < filledDots ? 0.9 : 0.4,
             }}
           />
         ))}

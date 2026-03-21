@@ -94,6 +94,7 @@ export default function GamePage() {
   }
 
   const bgGradient = getBackgroundPlaceholder(currentHour);
+  const isNight = currentHour >= 20 || currentHour < 6;
 
   const handleWalk = () => {
     const result = walkAction(character);
@@ -108,6 +109,7 @@ export default function GamePage() {
     <div
       className="min-h-screen flex flex-col"
       style={{ background: bgGradient }}
+      data-night={isNight}
     >
       <GameHeader
         onOpenMissions={() => setShowMissions(true)}

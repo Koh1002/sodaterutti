@@ -38,7 +38,6 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
   const activeMissions = dailyMissions.filter(m => !m.is_completed).length;
   const missionBadge = completedMissions > 0 ? completedMissions : activeMissions > 0 ? activeMissions : 0;
 
-  // アウトラインアイコン定義（SVG）
   const menuItems = [
     { label: 'ミッション', icon: 'mission', onClick: () => { onOpenMissions(); setMenuOpen(false); }, badge: missionBadge },
     { label: '実績', icon: 'trophy', onClick: () => { onOpenAchievements(); setMenuOpen(false); }, badge: 0 },
@@ -52,18 +51,18 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
     <header className="relative z-40">
       <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
         {/* 左: 時計 */}
-        <div className="glass rounded-full px-4 py-1.5 shadow-sm">
-          <span className="text-warm-700 text-sm font-medium tabular-nums tracking-relaxed">{timeString}</span>
+        <div className="glass rounded-full px-4 py-1.5 shadow-soft">
+          <span className="font-num text-text-primary text-sm tabular-nums tracking-relaxed">{timeString}</span>
         </div>
 
         {/* 中央: 世代・日数 */}
         {character && (
           <div className="flex items-center gap-1.5">
-            <span className="glass rounded-full text-warm-600 text-xs font-medium px-3 py-1 tracking-relaxed shadow-sm">
-              {character.generation}代目
+            <span className="glass rounded-full text-text-secondary text-[11px] font-medium px-3 py-1 tracking-relaxed shadow-soft">
+              <span className="font-num">{character.generation}</span>代目
             </span>
-            <span className="glass rounded-full text-warm-600 text-xs font-medium px-3 py-1 tracking-relaxed shadow-sm">
-              {character.age_days}日目
+            <span className="glass rounded-full text-text-secondary text-[11px] font-medium px-3 py-1 tracking-relaxed shadow-soft">
+              <span className="font-num">{character.age_days}</span>日目
             </span>
           </div>
         )}
@@ -71,7 +70,7 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
         {/* 右: メニューボタン */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="relative glass rounded-full w-10 h-10 flex items-center justify-center text-warm-600 hover:bg-white/70 transition active:scale-95 shadow-sm"
+          className="relative glass rounded-full w-10 h-10 flex items-center justify-center text-text-secondary hover:bg-white/50 transition active:scale-95 shadow-soft press-effect"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             {menuOpen ? (
@@ -82,13 +81,13 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
             ) : (
               <>
                 <line x1="4" y1="7" x2="20" y2="7" />
-                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="12" x2="16" y2="12" />
                 <line x1="4" y1="17" x2="20" y2="17" />
               </>
             )}
           </svg>
           {missionBadge > 0 && !menuOpen && (
-            <span className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-dusty-400 rounded-full text-[9px] text-white font-medium flex items-center justify-center shadow-sm">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-muted-rose rounded-full text-[8px] text-white font-num font-medium flex items-center justify-center shadow-sm">
               {missionBadge}
             </span>
           )}
@@ -110,23 +109,23 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
               initial={{ opacity: 0, y: -8, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="absolute right-4 top-full mt-1 z-50 w-52 glass-warm rounded-2xl shadow-lg overflow-hidden"
+              transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+              className="absolute right-4 top-full mt-1.5 z-50 w-52 glass rounded-2xl shadow-soft-md overflow-hidden"
             >
               {menuItems.map((item, i) => (
                 <button
                   key={item.label}
                   onClick={item.onClick}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-warm-100/60 active:bg-warm-200/50 transition text-sm tracking-relaxed ${
-                    i < menuItems.length - 1 ? 'border-b border-warm-200/40' : ''
-                  } ${item.label === 'ログアウト' ? 'text-warm-400' : 'text-warm-700'}`}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/30 active:bg-white/40 transition text-sm tracking-relaxed press-effect ${
+                    i < menuItems.length - 1 ? 'border-b border-white/20' : ''
+                  } ${item.label === 'ログアウト' ? 'text-text-tertiary' : 'text-text-primary'}`}
                 >
-                  <span className="w-7 flex justify-center">
+                  <span className="w-6 flex justify-center text-text-secondary">
                     <MenuIcon type={item.icon} />
                   </span>
                   <span className="font-medium flex-1">{item.label}</span>
                   {item.badge > 0 && (
-                    <span className="bg-dusty-400 text-white text-[9px] font-medium w-5 h-5 rounded-full flex items-center justify-center">
+                    <span className="bg-muted-rose text-white text-[8px] font-num font-medium w-4.5 h-4.5 rounded-full flex items-center justify-center">
                       {item.badge}
                     </span>
                   )}
@@ -140,9 +139,8 @@ export function GameHeader({ onOpenMissions, onOpenAchievements }: GameHeaderPro
   );
 }
 
-/** 細いラインのアウトラインアイコン */
 function MenuIcon({ type }: { type: string }) {
-  const props = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const props = { width: 17, height: 17, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
   switch (type) {
     case 'mission':

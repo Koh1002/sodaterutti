@@ -52,29 +52,32 @@ export function AchievementPanel({ isOpen, onClose }: AchievementPanelProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/40 flex items-end justify-center z-50"
+          className="fixed inset-0 bg-black/15 backdrop-blur-[2px] flex items-end justify-center z-50"
           onClick={(e) => e.target === e.currentTarget && onClose()}
         >
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25 }}
-            className="bg-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[80vh] overflow-y-auto"
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="glass rounded-t-4xl w-full max-w-lg p-5 pb-8 max-h-[80vh] overflow-y-auto shadow-soft-md"
           >
+            <div className="flex justify-center pt-0 pb-2">
+              <div className="w-9 h-[3px] bg-base-300/50 rounded-full" />
+            </div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-800">
-                🏆 実績 ({unlockedCount}/{totalCount})
+              <h3 className="text-sm font-medium text-text-primary tracking-airy">
+                実績 <span className="font-num text-text-tertiary text-[10px]">({unlockedCount}/{totalCount})</span>
               </h3>
-              <button onClick={onClose} className="text-gray-400 text-xl">
+              <button onClick={onClose} className="text-text-tertiary text-lg hover:text-text-secondary transition press-effect">
                 &times;
               </button>
             </div>
 
             {/* 進捗バー */}
-            <div className="bg-gray-200 rounded-full h-2 overflow-hidden mb-5">
+            <div className="bg-base-200/40 rounded-full h-[4px] overflow-hidden mb-5">
               <div
-                className="h-full bg-yellow-400 rounded-full transition-all duration-300"
+                className="h-full bg-muted-blue/50 rounded-full transition-all duration-500"
                 style={{ width: `${totalCount > 0 ? (unlockedCount / totalCount) * 100 : 0}%` }}
               />
             </div>
@@ -86,34 +89,34 @@ export function AchievementPanel({ isOpen, onClose }: AchievementPanelProps) {
 
                 return (
                   <div key={cat.key}>
-                    <h4 className="text-sm font-bold text-gray-600 mb-2">{cat.label}</h4>
+                    <h4 className="text-[11px] font-medium text-text-secondary mb-2 tracking-airy">{cat.label}</h4>
                     <div className="grid grid-cols-1 gap-2">
                       {catAchievements.map(achievement => {
                         const unlocked = isUnlocked(achievement.id);
                         return (
                           <div
                             key={achievement.id}
-                            className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                            className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${
                               unlocked
-                                ? 'bg-yellow-50 border-yellow-200'
-                                : 'bg-gray-50 border-gray-100 opacity-60'
+                                ? 'bg-muted-blue/8 border-muted-blue/15'
+                                : 'bg-base-100/30 border-white/15 opacity-50'
                             }`}
                           >
-                            <span className={`text-2xl ${unlocked ? '' : 'grayscale'}`}>
+                            <span className={`text-xl ${unlocked ? '' : 'grayscale opacity-60'}`}>
                               {achievement.icon}
                             </span>
                             <div className="flex-1">
-                              <p className={`text-sm font-medium ${
-                                unlocked ? 'text-gray-800' : 'text-gray-400'
+                              <p className={`text-xs font-medium tracking-relaxed ${
+                                unlocked ? 'text-text-primary' : 'text-text-tertiary'
                               }`}>
                                 {achievement.name}
                               </p>
-                              <p className="text-xs text-gray-400">
+                              <p className="text-[10px] text-text-tertiary tracking-relaxed">
                                 {unlocked ? achievement.description : '???'}
                               </p>
                             </div>
                             {unlocked && (
-                              <span className="text-green-500 text-lg">✓</span>
+                              <span className="text-muted-sage text-sm">✓</span>
                             )}
                           </div>
                         );

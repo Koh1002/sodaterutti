@@ -22,7 +22,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#F5F0E8",
+  themeColor: "#F5EBE0",
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="antialiased font-body">
+      <body className="antialiased font-body noise-overlay">
         {children}
         <PwaSetup />
       </body>

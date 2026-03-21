@@ -34,18 +34,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-100 to-purple-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-purple-600 mb-2">
-          おかえりなさい！
+    <div className="min-h-screen bg-gradient-to-b from-base-50 to-base-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md glass rounded-3xl shadow-soft-md p-8">
+        <h1 className="text-lg font-light text-center text-text-primary mb-1 tracking-airy">
+          おかえりなさい
         </h1>
-        <p className="text-center text-gray-500 mb-8">
+        <p className="text-center text-text-tertiary text-[10px] mb-8 tracking-relaxed">
           そだてるっちにログイン
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-[10px] font-medium text-text-secondary mb-1.5 tracking-relaxed">
               メールアドレス
             </label>
             <input
@@ -54,13 +54,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border border-base-200 rounded-2xl focus:ring-2 focus:ring-muted-blue/30 focus:border-muted-blue/40 outline-none transition bg-white/40 backdrop-blur-sm text-text-primary text-sm tracking-relaxed placeholder:text-text-tertiary"
               placeholder="example@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-[10px] font-medium text-text-secondary mb-1.5 tracking-relaxed">
               パスワード
             </label>
             <input
@@ -70,35 +70,35 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border border-base-200 rounded-2xl focus:ring-2 focus:ring-muted-blue/30 focus:border-muted-blue/40 outline-none transition bg-white/40 backdrop-blur-sm text-text-primary text-sm tracking-relaxed placeholder:text-text-tertiary"
               placeholder="6文字以上"
             />
           </div>
 
           {error && (
-            <p className="text-red-500 text-sm text-center">{error}</p>
+            <p className="text-muted-rose text-[10px] text-center tracking-relaxed">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-muted-blue/80 hover:bg-muted-blue text-white font-medium rounded-2xl transition shadow-soft disabled:opacity-50 disabled:cursor-not-allowed text-sm tracking-relaxed press-effect"
           >
             {loading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-500">
+          <p className="text-text-tertiary text-[10px] tracking-relaxed">
             アカウントをお持ちでない方は
-            <Link href="/auth/register" className="text-purple-500 hover:text-purple-700 font-medium ml-1">
+            <Link href="/auth/register" className="text-muted-blue hover:text-muted-blue/80 font-medium ml-1">
               新規登録
             </Link>
           </p>
         </div>
 
         <div className="mt-4 text-center">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 text-sm">
+          <Link href="/" className="text-text-tertiary hover:text-text-secondary text-[10px] tracking-relaxed">
             トップページへ戻る
           </Link>
         </div>

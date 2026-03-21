@@ -14,7 +14,7 @@ interface ActionButtonsProps {
   onWalk: () => void;
 }
 
-// ボトムシートモーダル
+/** BottomSheet */
 function BottomSheet({
   isOpen,
   onClose,
@@ -34,20 +34,20 @@ function BottomSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-warm-800/20 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/15 backdrop-blur-[2px] z-40"
             onClick={onClose}
           />
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 glass-warm rounded-t-3xl shadow-lg pb-safe"
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 glass rounded-t-4xl shadow-soft-md pb-safe"
           >
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-warm-300 rounded-full" />
+              <div className="w-9 h-[3px] bg-base-300/50 rounded-full" />
             </div>
-            <p className="text-sm text-warm-600 font-medium text-center mb-3 tracking-relaxed">{title}</p>
+            <p className="text-xs text-text-secondary font-medium text-center mb-3 tracking-airy">{title}</p>
             <div className="px-5 pb-6">
               {children}
             </div>
@@ -58,8 +58,8 @@ function BottomSheet({
   );
 }
 
-/** 細いラインのアクションアイコン */
-function ActionIcon({ type, size = 22 }: { type: string; size?: number }) {
+/** アウトラインアイコン */
+function ActionIcon({ type, size = 21 }: { type: string; size?: number }) {
   const props = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.4, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
   switch (type) {
@@ -88,12 +88,12 @@ function ActionIcon({ type, size = 22 }: { type: string; size?: number }) {
   }
 }
 
-// ステータスの色をニュアンスカラーに
+/** ステータスカラー（くすみ系） */
 const statusColors = {
-  hunger: '#D4898F',    // ダスティピンク
-  happiness: '#C0767D', // ローズ
-  stamina: '#8BAF8E',   // セージグリーン
-  cleanliness: '#A7C2A9', // ミントセージ
+  hunger: '#C4A4A7',     // くすみローズ
+  happiness: '#B5A0A8',  // モーヴ
+  stamina: '#B9BAA3',    // セージグリーン
+  cleanliness: '#8E9AAF', // くすみブルー
 };
 
 export function ActionButtons({ onWalk }: ActionButtonsProps) {
@@ -118,7 +118,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
   const closeAll = () => { setShowFoodMenu(false); setShowGameMenu(false); setShowMoreMenu(false); };
 
-  // メイン5つのドックアクション
   const dockActions = [
     {
       icon: 'meal',
@@ -157,7 +156,6 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
     },
   ];
 
-  // 「その他」メニュー（サブアクション）
   const moreActions = [
     { icon: 'pet', label: 'なでる', onClick: handlePet, disabled: character.is_sleeping || petCooldown },
     { icon: 'cure', label: '治療', onClick: () => cure(), disabled: !character.is_sick },
@@ -188,64 +186,63 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
   return (
     <>
-      {/* ===== ボトムドック（固定） ===== */}
-      <div className="fixed bottom-0 left-0 right-0 z-30">
+      {/* ===== Floating Bottom Dock ===== */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 px-3 pb-safe">
         <div className="max-w-lg mx-auto">
-          {/* コンパクトステータス表示 */}
+          {/* コンパクトステータス */}
           <div className="flex justify-center gap-5 px-4 pb-2">
-            <CompactStatus icon="🍽" value={character.hunger} label="お腹" color={statusColors.hunger} />
-            <CompactStatus icon="♡" value={character.happiness} label="気持ち" color={statusColors.happiness} />
-            <CompactStatus icon="◇" value={character.stamina} label="体力" color={statusColors.stamina} />
-            <CompactStatus icon="✧" value={character.cleanliness} label="清潔" color={statusColors.cleanliness} />
+            <CompactStatus icon="◐" value={character.hunger} label="お腹" color={statusColors.hunger} />
+            <CompactStatus icon="◑" value={character.happiness} label="気持ち" color={statusColors.happiness} />
+            <CompactStatus icon="◒" value={character.stamina} label="体力" color={statusColors.stamina} />
+            <CompactStatus icon="◓" value={character.cleanliness} label="清潔" color={statusColors.cleanliness} />
             {character.is_sick && (
-              <div className="flex flex-col items-center justify-center gap-1">
-                <span className="text-sm animate-pulse opacity-70">⚕</span>
-                <div className="flex gap-[3px]">{Array.from({length:5}).map((_,i) => <div key={i} className="w-[5px] h-[5px] rounded-full bg-dusty-400" />)}</div>
-                <span className="text-[9px] text-dusty-500 font-medium tracking-airy">病気</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xs opacity-50">!</span>
+                <div className="flex gap-[3px]">{Array.from({length:5}).map((_,i) => <div key={i} className="w-[5px] h-[5px] rounded-full bg-muted-rose/70" />)}</div>
+                <span className="text-[8px] text-muted-rose tracking-wide">病気</span>
               </div>
             )}
           </div>
 
-          {/* ドックバー本体 */}
-          <div className="glass-warm border-t border-warm-200/40 shadow-[0_-1px_8px_rgba(0,0,0,0.03)]">
-            <div className="flex items-center justify-around max-w-md mx-auto px-2 pt-2 pb-safe">
+          {/* Floating ドックバー */}
+          <div className="glass rounded-3xl shadow-soft-md mb-1">
+            <div className="flex items-center justify-around max-w-md mx-auto px-1 py-1.5">
               {dockActions.map((action) => (
                 <motion.button
                   key={action.label}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={{ scale: 0.88, y: 1 }}
                   onClick={action.onClick}
                   disabled={action.disabled}
-                  className={`flex flex-col items-center justify-center min-w-[52px] min-h-[50px] py-1 px-2 rounded-xl transition-all ${
+                  className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 px-2 rounded-2xl transition-all ${
                     action.disabled
-                      ? 'opacity-25 cursor-not-allowed'
+                      ? 'opacity-20 cursor-not-allowed'
                       : action.active
-                        ? 'bg-dusty-100'
-                        : 'active:bg-warm-100'
+                        ? 'bg-white/40'
+                        : 'active:bg-white/30'
                   }`}
                 >
-                  <span className={`transition-transform ${action.active ? 'scale-110 text-dusty-500' : 'text-warm-600'}`}>
+                  <span className={`transition-transform ${action.active ? 'scale-110 text-muted-blue' : 'text-text-secondary'}`}>
                     <ActionIcon type={action.icon} />
                   </span>
-                  <span className={`text-[10px] font-medium mt-1 tracking-relaxed transition-colors ${
-                    action.active ? 'text-dusty-500' : 'text-warm-500'
+                  <span className={`text-[9px] font-medium mt-0.5 tracking-relaxed transition-colors ${
+                    action.active ? 'text-muted-blue' : 'text-text-tertiary'
                   }`}>
                     {action.label}
                   </span>
                 </motion.button>
               ))}
-              {/* その他ボタン */}
               <motion.button
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.88, y: 1 }}
                 onClick={() => { closeAll(); setShowMoreMenu(true); }}
-                className={`flex flex-col items-center justify-center min-w-[52px] min-h-[50px] py-1 px-2 rounded-xl transition-all ${
-                  showMoreMenu ? 'bg-dusty-100' : 'active:bg-warm-100'
+                className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 px-2 rounded-2xl transition-all ${
+                  showMoreMenu ? 'bg-white/40' : 'active:bg-white/30'
                 }`}
               >
-                <span className={showMoreMenu ? 'text-dusty-500' : 'text-warm-600'}>
+                <span className={showMoreMenu ? 'text-muted-blue' : 'text-text-secondary'}>
                   <ActionIcon type="more" />
                 </span>
-                <span className={`text-[10px] font-medium mt-1 tracking-relaxed ${
-                  showMoreMenu ? 'text-dusty-500' : 'text-warm-500'
+                <span className={`text-[9px] font-medium mt-0.5 tracking-relaxed ${
+                  showMoreMenu ? 'text-muted-blue' : 'text-text-tertiary'
                 }`}>
                   その他
                 </span>
@@ -255,37 +252,29 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
         </div>
       </div>
 
-      {/* ===== その他メニュー ===== */}
-      <BottomSheet
-        isOpen={showMoreMenu}
-        onClose={() => setShowMoreMenu(false)}
-        title="その他のアクション"
-      >
+      {/* その他メニュー */}
+      <BottomSheet isOpen={showMoreMenu} onClose={() => setShowMoreMenu(false)} title="その他のアクション">
         <div className="grid grid-cols-3 gap-3">
           {moreActions.map((action) => (
             <button
               key={action.label}
               onClick={() => { if (!action.disabled) { action.onClick(); setShowMoreMenu(false); } }}
               disabled={action.disabled}
-              className={`flex flex-col items-center py-4 rounded-2xl transition tracking-relaxed ${
-                action.disabled ? 'opacity-25 cursor-not-allowed bg-warm-50' : 'bg-warm-50 hover:bg-warm-100 active:bg-warm-200'
+              className={`flex flex-col items-center py-4 rounded-2xl transition tracking-relaxed press-effect ${
+                action.disabled ? 'opacity-20 cursor-not-allowed bg-base-100/50' : 'bg-base-100/50 hover:bg-base-100 active:bg-base-200'
               }`}
             >
-              <span className="text-warm-600 mb-1">
-                <ActionIcon type={action.icon} size={28} />
+              <span className="text-text-secondary mb-1">
+                <ActionIcon type={action.icon} size={26} />
               </span>
-              <span className="text-sm text-warm-600 font-medium mt-1">{action.label}</span>
+              <span className="text-xs text-text-secondary font-medium mt-1">{action.label}</span>
             </button>
           ))}
         </div>
       </BottomSheet>
 
-      {/* ===== 食事メニュー ===== */}
-      <BottomSheet
-        isOpen={showFoodMenu}
-        onClose={() => setShowFoodMenu(false)}
-        title="何を食べる？"
-      >
+      {/* 食事メニュー */}
+      <BottomSheet isOpen={showFoodMenu} onClose={() => setShowFoodMenu(false)} title="何を食べる？">
         <div className="grid grid-cols-4 gap-3">
           {[
             { key: 'onigiri' as const, icon: '🍙', label: 'おにぎり' },
@@ -295,28 +284,24 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
             <button
               key={food.key}
               onClick={() => { feed(food.key); setShowFoodMenu(false); }}
-              className="flex flex-col items-center py-4 rounded-2xl bg-cream-100 hover:bg-cream-200 active:bg-cream-300 transition tracking-relaxed"
+              className="flex flex-col items-center py-4 rounded-2xl bg-base-100/50 hover:bg-base-100 active:bg-base-200 transition tracking-relaxed press-effect"
             >
-              <span className="text-2xl">{food.icon}</span>
-              <span className="text-xs text-warm-600 font-medium mt-1.5">{food.label}</span>
+              <span className="text-2xl opacity-80">{food.icon}</span>
+              <span className="text-[10px] text-text-secondary font-medium mt-1.5">{food.label}</span>
             </button>
           ))}
           <button
             onClick={() => { giveSnack(); setShowFoodMenu(false); }}
-            className="flex flex-col items-center py-4 rounded-2xl bg-cream-100 hover:bg-cream-200 active:bg-cream-300 transition tracking-relaxed"
+            className="flex flex-col items-center py-4 rounded-2xl bg-base-100/50 hover:bg-base-100 active:bg-base-200 transition tracking-relaxed press-effect"
           >
-            <span className="text-2xl">🍪</span>
-            <span className="text-xs text-warm-600 font-medium mt-1.5">おやつ</span>
+            <span className="text-2xl opacity-80">🍪</span>
+            <span className="text-[10px] text-text-secondary font-medium mt-1.5">おやつ</span>
           </button>
         </div>
       </BottomSheet>
 
-      {/* ===== ミニゲーム選択 ===== */}
-      <BottomSheet
-        isOpen={showGameMenu}
-        onClose={() => setShowGameMenu(false)}
-        title="何で遊ぶ？"
-      >
+      {/* ミニゲーム選択 */}
+      <BottomSheet isOpen={showGameMenu} onClose={() => setShowGameMenu(false)} title="何で遊ぶ？">
         <div className="grid grid-cols-3 gap-3">
           {miniGames.map((game) => {
             const { canPlay } = checkMiniGameCooldown(character, game.key);
@@ -324,14 +309,14 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
               <button
                 key={game.key}
                 onClick={() => canPlay && handleStartGame(game.key)}
-                className={`flex flex-col items-center py-4 rounded-2xl transition tracking-relaxed ${
-                  canPlay ? 'bg-sage-50 hover:bg-sage-100 active:bg-sage-200' : 'opacity-30 cursor-not-allowed bg-warm-50'
+                className={`flex flex-col items-center py-4 rounded-2xl transition tracking-relaxed press-effect ${
+                  canPlay ? 'bg-base-100/50 hover:bg-base-100 active:bg-base-200' : 'opacity-25 cursor-not-allowed bg-base-100/30'
                 }`}
               >
-                <span className="text-2xl">{game.icon}</span>
-                <span className="text-xs text-warm-600 font-medium mt-1.5">{game.label}</span>
+                <span className="text-2xl opacity-80">{game.icon}</span>
+                <span className="text-[10px] text-text-secondary font-medium mt-1.5">{game.label}</span>
                 {!canPlay && (
-                  <span className="text-[10px] text-warm-400 mt-0.5">クール中</span>
+                  <span className="text-[9px] text-text-tertiary mt-0.5">クール中</span>
                 )}
               </button>
             );
@@ -339,7 +324,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
         </div>
       </BottomSheet>
 
-      {/* ===== ミニゲーム ===== */}
+      {/* ミニゲーム */}
       <AnimatePresence>
         {activeGame === 'janken' && (
           <MiniGameJanken
@@ -447,62 +432,65 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed inset-0 bg-warm-800/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/15 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && gameOver && onClose()}
     >
-      <div className="glass-warm rounded-3xl p-6 w-full max-w-sm shadow-lg">
-        <h3 className="text-lg font-medium text-center text-warm-700 mb-4 tracking-relaxed">
+      <motion.div
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
+        className="glass rounded-3xl p-6 w-full max-w-sm shadow-soft-md"
+      >
+        <h3 className="text-base font-medium text-center text-text-primary mb-3 tracking-airy">
           じゃんけんゲーム
         </h3>
-        <p className="text-center text-xs text-warm-400 mb-4 tracking-relaxed">
-          {gameOver ? '結果発表！' : `${round + 1}/3 ラウンド`}
+        <p className="text-center text-[10px] text-text-tertiary mb-4 tracking-relaxed font-num">
+          {gameOver ? '結果発表' : `${round + 1}/3 ラウンド`}
         </p>
         {playerHand && cpuHand && (
           <div className="flex items-center justify-center gap-6 mb-4">
             <div className="text-center">
               <span className="text-3xl">{hands.find(h => h.key === playerHand)?.emoji}</span>
-              <p className="text-[10px] text-warm-400 mt-1 tracking-relaxed">あなた</p>
+              <p className="text-[9px] text-text-tertiary mt-1 tracking-relaxed">あなた</p>
             </div>
-            <span className="text-sm font-medium text-warm-300 tracking-airy">VS</span>
+            <span className="font-num text-xs text-text-tertiary tracking-airy">VS</span>
             <div className="text-center">
               <span className="text-3xl">{hands.find(h => h.key === cpuHand)?.emoji}</span>
-              <p className="text-[10px] text-warm-400 mt-1 tracking-relaxed">相手</p>
+              <p className="text-[9px] text-text-tertiary mt-1 tracking-relaxed">相手</p>
             </div>
           </div>
         )}
         {roundResult && (
-          <p className={`text-center text-base font-medium mb-4 tracking-relaxed ${
-            roundResult === '勝ち！' ? 'text-sage-500' :
-            roundResult === '負け...' ? 'text-dusty-400' :
-            'text-warm-400'
+          <p className={`text-center text-sm font-medium mb-4 tracking-relaxed ${
+            roundResult === '勝ち！' ? 'text-muted-sage' :
+            roundResult === '負け...' ? 'text-muted-rose' :
+            'text-text-tertiary'
           }`}>
             {roundResult}
           </p>
         )}
         {!gameOver ? (
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-3">
             {hands.map((hand) => (
               <motion.button
                 key={hand.key}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.92 }}
+                whileTap={{ scale: 0.9, y: 2 }}
                 onClick={() => playRound(hand.key)}
-                className="flex flex-col items-center p-3 rounded-xl bg-cream-100 hover:bg-cream-200 transition"
+                className="flex flex-col items-center p-3 rounded-2xl bg-base-100/50 hover:bg-base-100 transition press-effect"
               >
                 <span className="text-3xl">{hand.emoji}</span>
-                <span className="text-[10px] text-warm-500 mt-1 tracking-relaxed">{hand.label}</span>
+                <span className="text-[9px] text-text-tertiary mt-1 tracking-relaxed">{hand.label}</span>
               </motion.button>
             ))}
           </div>
         ) : (
           <div className="text-center space-y-3">
-            <p className="text-xl font-medium text-warm-700 tracking-relaxed">
+            <p className="text-lg font-light text-text-primary tracking-relaxed">
               {wins >= 3 ? 'パーフェクト！' : wins >= 2 ? '大成功！' : wins >= 1 ? '成功！' : '残念...'}
             </p>
-            <p className="text-xs text-warm-400 tracking-relaxed">{wins}勝 / 3回</p>
+            <p className="font-num text-[10px] text-text-tertiary tracking-relaxed">{wins}勝 / 3回</p>
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-dusty-400 text-white rounded-xl hover:bg-dusty-500 transition font-medium tracking-relaxed"
+              className="px-6 py-2.5 bg-muted-blue/80 text-white rounded-xl hover:bg-muted-blue transition font-medium text-sm tracking-relaxed press-effect"
             >
               閉じる
             </button>
@@ -512,15 +500,15 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${
+              className={`w-2 h-2 rounded-full transition-colors ${
                 i < round
-                  ? i < wins ? 'bg-sage-400' : 'bg-dusty-300'
-                  : 'bg-warm-200'
+                  ? i < wins ? 'bg-muted-sage' : 'bg-muted-rose/60'
+                  : 'bg-base-200'
               }`}
             />
           ))}
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

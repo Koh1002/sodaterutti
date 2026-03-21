@@ -34,26 +34,26 @@ export function GraveScreen({ characterName, species, ageDays, generation, cause
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-gradient-to-b from-yellow-50 to-pink-50 flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-gradient-to-b from-base-50 to-base-100 flex items-center justify-center z-50 p-4"
       >
         <div className="text-center space-y-6">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', bounce: 0.5 }}
-            className="text-8xl"
+            className="text-5xl opacity-50"
           >
             🥚
           </motion.div>
-          <p className="text-lg text-purple-600 font-bold">
-            あたらしいたまごが見つかった！
+          <p className="text-sm text-text-primary font-light tracking-airy">
+            あたらしいたまごが見つかった
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs text-text-tertiary tracking-relaxed">
             {characterName}の思いを受け継いで...
           </p>
           <button
             onClick={onRestart}
-            className="px-8 py-3 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-600 transition shadow-lg"
+            className="px-8 py-3 bg-muted-blue/80 text-white font-medium rounded-2xl hover:bg-muted-blue transition shadow-soft text-sm tracking-relaxed press-effect"
           >
             たまごを温める
           </button>
@@ -66,16 +66,16 @@ export function GraveScreen({ characterName, species, ageDays, generation, cause
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-gradient-to-b from-gray-800 via-gray-700 to-gray-900 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gradient-to-b from-[#3D3A38] via-[#2E2B29] to-[#1E1C1A] flex items-center justify-center z-50 p-4"
     >
       <div className="text-center space-y-6 max-w-sm">
         {/* 星空パーティクル */}
-        {Array.from({ length: 20 }).map((_, i) => (
+        {Array.from({ length: 15 }).map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
+            className="absolute w-0.5 h-0.5 bg-base-200 rounded-full"
             style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-            animate={{ opacity: [0.2, 1, 0.2] }}
+            animate={{ opacity: [0.1, 0.5, 0.1] }}
             transition={{ duration: 2 + Math.random() * 2, repeat: Infinity, delay: Math.random() * 2 }}
           />
         ))}
@@ -85,21 +85,21 @@ export function GraveScreen({ characterName, species, ageDays, generation, cause
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <div className="w-32 h-32 mx-auto mb-4 relative opacity-80">
+          <div className="w-28 h-28 mx-auto mb-4 relative opacity-70">
             <Image
               src={imageSrc}
               alt={species.name}
-              width={128}
-              height={128}
+              width={112}
+              height={112}
               className="object-contain grayscale"
               onError={() => setImgError(true)}
             />
             <motion.div
               className="absolute inset-0"
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              animate={{ opacity: [0.2, 0.4, 0.2] }}
               transition={{ duration: 3, repeat: Infinity }}
               style={{
-                background: 'radial-gradient(circle, rgba(255,255,200,0.3) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(227,213,202,0.2) 0%, transparent 70%)',
               }}
             />
           </div>
@@ -111,20 +111,20 @@ export function GraveScreen({ characterName, species, ageDays, generation, cause
           transition={{ delay: 1 }}
           className="space-y-3"
         >
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-lg font-light text-white/80 tracking-airy">
             さようなら、{characterName}
           </h2>
-          <p className="text-gray-300 text-sm">{causeMessage}</p>
+          <p className="text-base-400 text-xs tracking-relaxed">{causeMessage}</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
-          className="bg-white/10 backdrop-blur-sm rounded-xl p-4 space-y-2"
+          className="glass-dark rounded-2xl p-4 space-y-2"
         >
-          <p className="text-white/80 text-sm font-bold">おもいで</p>
-          <div className="grid grid-cols-2 gap-2 text-xs text-white/60">
+          <p className="text-white/60 text-[10px] font-medium tracking-airy">おもいで</p>
+          <div className="grid grid-cols-2 gap-2 text-[10px] text-white/40 tracking-relaxed font-num">
             <span>なまえ: {characterName}</span>
             <span>しゅぞく: {species.name}</span>
             <span>ねんれい: {ageDays}日</span>
@@ -137,7 +137,7 @@ export function GraveScreen({ characterName, species, ageDays, generation, cause
           animate={{ opacity: 1 }}
           transition={{ delay: 3 }}
           onClick={() => setPhase('restart')}
-          className="px-8 py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl transition backdrop-blur-sm border border-white/30"
+          className="px-8 py-3 glass-dark text-white/80 font-medium rounded-2xl transition hover:bg-white/15 text-sm tracking-relaxed press-effect"
         >
           おもいでにする
         </motion.button>

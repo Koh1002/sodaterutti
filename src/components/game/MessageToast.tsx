@@ -18,13 +18,14 @@ export function MessageToast() {
     <AnimatePresence>
       {message && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          exit={{ opacity: 0, y: -15 }}
+          transition={{ ease: [0.23, 1, 0.32, 1] }}
           className="fixed top-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
         >
-          <div className="glass-warm shadow-sm rounded-2xl px-6 py-3 max-w-xs text-center">
-            <p className="text-xs text-warm-600 font-medium tracking-relaxed">{message}</p>
+          <div className="glass shadow-soft rounded-2xl px-5 py-2.5 max-w-xs text-center">
+            <p className="text-xs text-text-secondary tracking-relaxed">{message}</p>
           </div>
         </motion.div>
       )}

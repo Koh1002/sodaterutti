@@ -1,15 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&family=Quicksand:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --base-cream: #F5EBE0;
+  --base-taupe: #E3D5CA;
+  --muted-blue: #8E9AAF;
+  --muted-sage: #B9BAA3;
+}
+
 body {
-  color: #4A3F33;
-  background: #FAF8F5;
-  font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif;
+  color: #4A4A4A;
+  background: #F5EBE0;
+  font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
   -webkit-font-smoothing: antialiased;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
+}
+
+/* ノイズテクスチャオーバーレイ（質感） */
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* グラスモーフィズム */
+.glass {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-warm {
+  background: rgba(245, 235, 224, 0.5);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-dark {
+  background: rgba(74, 74, 74, 0.3);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ボタン押し込みエフェクト */
+.press-effect {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.press-effect:active {
+  transform: scale(0.96) translateY(1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 @keyframes slide-up {
@@ -29,20 +80,11 @@ body {
 
 /* セーフエリア対応 */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 8px);
+  padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px);
 }
 
-/* グラスモーフィズム共通 */
-.glass {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.glass-warm {
-  background: rgba(250, 248, 245, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(235, 225, 210, 0.5);
+/* 欧文フォント適用 */
+.font-num {
+  font-family: 'Quicksand', 'Zen Maru Gothic', sans-serif;
+  font-weight: 500;
 }

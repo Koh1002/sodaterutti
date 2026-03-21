@@ -47,23 +47,23 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-gradient-to-b from-pink-200 via-pink-100 to-white flex items-center justify-center z-50"
+        className="fixed inset-0 bg-gradient-to-b from-[#F5CDD0] via-[#F5EBE0] to-white flex items-center justify-center z-50"
       >
         <div className="text-center space-y-6 p-6">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', duration: 0.5 }}
-            className="text-5xl"
+            className="text-4xl opacity-50"
           >
-            💒
+            ♡
           </motion.div>
 
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-2xl font-bold text-pink-600"
+            className="text-base font-light text-muted-rose tracking-airy"
           >
             けっこんしき
           </motion.h2>
@@ -75,20 +75,20 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
             className="flex items-center justify-center gap-6"
           >
             <div className="text-center">
-              <CandidateImage imageKey={characterSpecies.image_key} name={characterSpecies.name} size={96} />
-              <p className="text-sm font-bold text-pink-700 mt-2">{characterName}</p>
+              <CandidateImage imageKey={characterSpecies.image_key} name={characterSpecies.name} size={80} />
+              <p className="text-xs text-text-secondary mt-2 tracking-relaxed">{characterName}</p>
             </div>
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 1.5, type: 'spring' }}
-              className="text-4xl"
+              className="text-2xl text-muted-rose/50"
             >
-              💕
+              ♡
             </motion.span>
             <div className="text-center">
-              <CandidateImage imageKey={selectedCandidate.image_key} name={selectedCandidate.name} size={96} />
-              <p className="text-sm font-bold text-pink-700 mt-2">{selectedCandidate.name}</p>
+              <CandidateImage imageKey={selectedCandidate.image_key} name={selectedCandidate.name} size={80} />
+              <p className="text-xs text-text-secondary mt-2 tracking-relaxed">{selectedCandidate.name}</p>
             </div>
           </motion.div>
 
@@ -96,22 +96,22 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 2.5 }}
-            className="text-pink-500 text-lg"
+            className="text-muted-rose text-sm tracking-airy"
           >
-            おめでとうございます！
+            おめでとうございます
           </motion.p>
 
-          {/* ハートパーティクル */}
-          {Array.from({ length: 8 }).map((_, i) => (
+          {/* パーティクル */}
+          {Array.from({ length: 6 }).map((_, i) => (
             <motion.span
               key={i}
-              className="absolute text-2xl"
+              className="absolute text-base opacity-40"
               style={{ left: `${15 + Math.random() * 70}%`, top: `${20 + Math.random() * 60}%` }}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: [0, 1, 0], y: -50 }}
-              transition={{ duration: 2, delay: 1 + i * 0.3, repeat: Infinity }}
+              animate={{ opacity: [0, 0.4, 0], y: -40 }}
+              transition={{ duration: 2.5, delay: 1 + i * 0.3, repeat: Infinity }}
             >
-              💗
+              ♡
             </motion.span>
           ))}
         </div>
@@ -124,13 +124,13 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="fixed inset-0 bg-gradient-to-b from-yellow-50 to-pink-50 flex items-center justify-center z-50"
+        className="fixed inset-0 bg-gradient-to-b from-base-50 to-base-100 flex items-center justify-center z-50"
       >
         <div className="text-center space-y-6 p-6">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-lg text-gray-600"
+            className="text-xs text-text-tertiary tracking-relaxed"
           >
             {characterName}は{selectedCandidate?.name || 'パートナー'}と旅立ちました...
           </motion.p>
@@ -139,7 +139,7 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 1, type: 'spring', bounce: 0.5 }}
-            className="text-8xl"
+            className="text-5xl opacity-50"
           >
             🥚
           </motion.div>
@@ -148,54 +148,53 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
-            className="text-xl font-bold text-purple-600"
+            className="text-sm font-light text-text-primary tracking-airy"
           >
-            あたらしいたまごが生まれた！
+            あたらしいたまごが生まれた
           </motion.p>
         </div>
       </motion.div>
     );
   }
 
-  // 候補選択フェーズ
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-gradient-to-b from-pink-100 to-purple-100 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-gradient-to-b from-[#F5CDD0]/30 to-base-100 flex items-center justify-center z-50 p-4"
     >
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <span className="text-4xl">💒</span>
-          <h2 className="text-xl font-bold text-pink-600 mt-2">けっこんあいて</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <span className="text-2xl opacity-40">♡</span>
+          <h2 className="text-base font-light text-muted-rose mt-2 tracking-airy">けっこんあいて</h2>
+          <p className="text-[10px] text-text-tertiary mt-1 tracking-relaxed">
             {characterName}の結婚相手を選んでください
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {candidates.map((candidate, i) => {
             const personality = candidate.personality as { type: string; description: string } | null;
             return (
               <motion.button
                 key={candidate.id}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.15 }}
+                transition={{ delay: i * 0.12, ease: [0.23, 1, 0.32, 1] }}
                 onClick={() => handleSelect(candidate)}
-                className="w-full bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex items-center gap-4 text-left border border-pink-100 hover:border-pink-300"
+                className="w-full glass rounded-2xl p-4 shadow-soft hover:shadow-soft-md transition flex items-center gap-4 text-left hover:bg-white/50 press-effect"
               >
-                <div className="w-16 h-16 shrink-0">
-                  <CandidateImage imageKey={candidate.image_key} name={candidate.name} size={64} />
+                <div className="w-14 h-14 shrink-0">
+                  <CandidateImage imageKey={candidate.image_key} name={candidate.name} size={56} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-pink-700">{candidate.name}</p>
-                  <p className="text-xs text-gray-500">{candidate.speciesName}</p>
+                  <p className="text-sm font-medium text-text-primary tracking-relaxed">{candidate.name}</p>
+                  <p className="text-[10px] text-text-tertiary tracking-relaxed">{candidate.speciesName}</p>
                   {personality && (
-                    <p className="text-xs text-pink-400 mt-1">{personality.description}</p>
+                    <p className="text-[10px] text-muted-rose mt-0.5 tracking-relaxed">{personality.description}</p>
                   )}
                 </div>
-                <span className="text-pink-300 text-xl">💕</span>
+                <span className="text-muted-rose/40 text-sm">♡</span>
               </motion.button>
             );
           })}
@@ -203,7 +202,7 @@ export function MarriageScreen({ characterName, characterSpecies, candidates, on
 
         <button
           onClick={onClose}
-          className="w-full mt-4 py-2 text-sm text-gray-400 hover:text-gray-600 transition"
+          className="w-full mt-4 py-2 text-[10px] text-text-tertiary hover:text-text-secondary transition tracking-relaxed"
         >
           まだ結婚しない
         </button>

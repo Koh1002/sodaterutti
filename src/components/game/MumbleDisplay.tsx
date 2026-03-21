@@ -39,13 +39,14 @@ export function MumbleDisplay() {
     <AnimatePresence>
       {visible && mumble && (
         <motion.div
-          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+          initial={{ opacity: 0, y: 8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.9 }}
-          className="relative glass-warm rounded-xl px-3 py-1.5 shadow-sm max-w-[200px]"
+          exit={{ opacity: 0, y: 8, scale: 0.95 }}
+          transition={{ ease: [0.23, 1, 0.32, 1] }}
+          className="relative glass rounded-xl px-3 py-1.5 shadow-soft max-w-[200px]"
         >
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-[rgba(250,248,245,0.65)] border-t border-l border-warm-200/50 rotate-45" />
-          <p className="text-xs text-warm-600 text-center relative z-10 tracking-relaxed">{mumble}</p>
+          <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-[rgba(255,255,255,0.4)] border-t border-l border-white/60 rotate-45" />
+          <p className="text-[10px] text-text-secondary text-center relative z-10 tracking-relaxed">{mumble}</p>
         </motion.div>
       )}
     </AnimatePresence>

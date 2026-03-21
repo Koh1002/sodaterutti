@@ -2,22 +2,21 @@ import Link from 'next/link';
 
 export default function TopPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-cream-100 via-dusty-50 to-sage-50 flex flex-col">
-      {/* メインビジュアル */}
+    <div className="min-h-screen bg-gradient-to-b from-base-50 via-base-100 to-base-200 flex flex-col">
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        {/* タイトルロゴ */}
-        <div className="mb-10">
-          <div className="text-5xl mb-5 animate-bounce opacity-50">🥚</div>
-          <h1 className="text-3xl font-medium text-warm-700 tracking-airy">
+        {/* タイトル */}
+        <div className="mb-12">
+          <div className="text-4xl mb-5 animate-bounce opacity-35">🥚</div>
+          <h1 className="font-display text-2xl font-light text-text-primary tracking-wide">
             そだてるっち
           </h1>
-          <p className="text-warm-400 mt-2 text-sm tracking-relaxed">
+          <p className="text-text-tertiary mt-2 text-xs tracking-airy">
             キャラクター育成ゲーム
           </p>
         </div>
 
         {/* キャラクタープレビュー */}
-        <div className="flex gap-4 mb-10 text-3xl opacity-50">
+        <div className="flex gap-5 mb-12 text-2xl opacity-35">
           <span className="animate-bounce" style={{ animationDelay: '0ms' }}>🐣</span>
           <span className="animate-bounce" style={{ animationDelay: '100ms' }}>🐥</span>
           <span className="animate-bounce" style={{ animationDelay: '200ms' }}>🐤</span>
@@ -26,7 +25,7 @@ export default function TopPage() {
         </div>
 
         {/* 説明 */}
-        <div className="max-w-md space-y-3 mb-10">
+        <div className="max-w-md space-y-3 mb-12">
           <FeatureCard
             title="毎日お世話"
             description="ごはんをあげたり、遊んだり、お掃除したり。毎日のお世話でキャラクターが成長"
@@ -45,22 +44,21 @@ export default function TopPage() {
         <div className="space-y-3 w-full max-w-xs">
           <Link
             href="/auth/register"
-            className="block w-full py-3.5 bg-dusty-400 hover:bg-dusty-500 text-white font-medium rounded-xl transition shadow-sm text-center text-sm tracking-relaxed"
+            className="block w-full py-3.5 bg-muted-blue/80 hover:bg-muted-blue text-white font-medium rounded-2xl transition shadow-soft text-center text-sm tracking-relaxed press-effect"
           >
             はじめる
           </Link>
           <Link
             href="/auth/login"
-            className="block w-full py-3 glass hover:bg-white/70 text-warm-600 font-medium rounded-xl transition text-center text-sm tracking-relaxed"
+            className="block w-full py-3 glass hover:bg-white/50 text-text-secondary font-medium rounded-2xl transition text-center text-sm tracking-relaxed press-effect"
           >
             ログイン
           </Link>
         </div>
       </main>
 
-      {/* フッター */}
-      <footer className="text-center py-4 text-[10px] text-warm-300 tracking-relaxed">
-        <p>そだてるっち &copy; 2026</p>
+      <footer className="text-center py-4 text-[9px] text-text-tertiary tracking-wide">
+        <p className="font-num">そだてるっち © 2026</p>
       </footer>
     </div>
   );
@@ -68,11 +66,11 @@ export default function TopPage() {
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="glass rounded-xl p-4 flex items-start gap-3 text-left shadow-sm">
-      <div className="w-1.5 h-1.5 rounded-full bg-dusty-300 mt-1.5 shrink-0" />
+    <div className="glass rounded-2xl p-4 flex items-start gap-3 text-left shadow-soft">
+      <div className="w-1.5 h-1.5 rounded-full bg-muted-blue/40 mt-1.5 shrink-0" />
       <div>
-        <h3 className="font-medium text-warm-600 text-sm tracking-relaxed">{title}</h3>
-        <p className="text-xs text-warm-400 mt-0.5 tracking-relaxed leading-relaxed">{description}</p>
+        <h3 className="font-medium text-text-primary text-xs tracking-relaxed">{title}</h3>
+        <p className="text-[10px] text-text-tertiary mt-0.5 tracking-relaxed leading-relaxed">{description}</p>
       </div>
     </div>
   );

@@ -7,10 +7,13 @@ import { AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useGameStore } from '@/stores/game-store';
 import { BattleScreen } from '@/components/game/BattleScreen';
+import { ChallengePanel } from '@/components/game/ChallengePanel';
+import { CoopGameScreen } from '@/components/game/CoopGameScreen';
 import {
   calculateStrength, createBattler, createCpuBattler,
   type Battler,
 } from '@/lib/battle-logic';
+import { getPendingChallenges } from '@/lib/challenge-logic';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
 import type { Database } from '@/types/database';
 
@@ -19,11 +22,12 @@ type Species = Database['public']['Tables']['species']['Row'];
 export default function BattlePage() {
   const router = useRouter();
   const { character, species, loadCharacter, setMessage } = useGameStore();
-  const [mode, setMode] = useState<'menu' | 'difficulty' | 'friend-menu' | 'battle'>('menu');
+  const [mode, setMode] = useState<'menu' | 'difficulty' | 'friend-menu' | 'battle' | 'challenge' | 'coop'>('menu');
   const [playerBattler, setPlayerBattler] = useState<Battler | null>(null);
   const [opponentBattler, setOpponentBattler] = useState<Battler | null>(null);
   const [allSpecies, setAllSpecies] = useState<Species[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [challengeCount, setChallengeCount] = useState(0);
 
   // フレンド対戦用
   const [friendCode, setFriendCode] = useState('');
@@ -42,6 +46,11 @@ export default function BattlePage() {
       // 自分のフレンドコード = user_id の先頭8文字
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setMyCode(user.id.slice(0, 8).toUpperCase());
+
+      // 受信チャレンジ数を取得
+      const challenges = await getPendingChallenges();
+      setChallengeCount(challenges.length);
+
       setIsLoading(false);
     };
     load();
@@ -91,7 +100,6 @@ export default function BattlePage() {
   const searchFriend = async () => {
     if (friendCode.length < 4) return;
     const supabase = createClient();
-    // フレンドコードでプロフィールを検索（RPC関数でUUID::textの前方一致）
     const code = friendCode.toLowerCase().replace(/[^a-f0-9]/g, '');
     if (code.length < 4) {
       setFriendSearchResult('4文字以上入力してください');
@@ -102,7 +110,6 @@ export default function BattlePage() {
 
     if (data && data.length > 0) {
       const friendId = data[0].uid;
-      // フレンドのキャラクターをRPC経由で取得（RLSバイパス）
       const { data: friendChar } = await supabase
         .rpc('get_friend_battle_character', { friend_user_id: friendId });
 
@@ -144,7 +151,6 @@ export default function BattlePage() {
 
   const handleBattleEnd = async (won: boolean) => {
     if (won) {
-      // 報酬: なつき度+15, お腹+20
       const supabase = createClient();
       const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
       await supabase
@@ -160,6 +166,20 @@ export default function BattlePage() {
     router.push('/game');
   };
 
+  const handleCoopEnd = async () => {
+    // 協力ゲームの報酬
+    const supabase = createClient();
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+    await supabase
+      .from('characters')
+      .update({
+        cleanliness: clamp(character.cleanliness + 20, 0, 100),
+      })
+      .eq('id', character.id);
+    setMessage('おそうじボーナス！ 清潔さ +20');
+    setMode('menu');
+  };
+
   // バトル中
   if (mode === 'battle' && playerBattler && opponentBattler) {
     return (
@@ -173,6 +193,15 @@ export default function BattlePage() {
     );
   }
 
+  // 協力ゲーム
+  if (mode === 'coop') {
+    return (
+      <AnimatePresence>
+        <CoopGameScreen onClose={handleCoopEnd} />
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50">
       <header className="bg-gradient-to-r from-red-500/90 to-orange-400/90 backdrop-blur-md shadow-lg px-4 py-3 flex items-center">
@@ -182,7 +211,7 @@ export default function BattlePage() {
         >
           ← 戻る
         </button>
-        <h1 className="text-lg font-bold text-white">⚔️ バトル</h1>
+        <h1 className="text-lg font-bold text-white">⚔️ バトル&協力</h1>
       </header>
 
       <main className="max-w-lg mx-auto p-4">
@@ -205,6 +234,8 @@ export default function BattlePage() {
 
         {mode === 'menu' && (
           <div className="space-y-3">
+            {/* 対戦セクション */}
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">対戦</p>
             <button
               onClick={() => setMode('difficulty')}
               className="w-full py-4 bg-gradient-to-r from-red-400 to-orange-400 text-white font-bold rounded-2xl shadow-lg text-base flex items-center justify-center gap-2"
@@ -215,7 +246,27 @@ export default function BattlePage() {
               onClick={() => setMode('friend-menu')}
               className="w-full py-4 bg-gradient-to-r from-blue-400 to-cyan-400 text-white font-bold rounded-2xl shadow-lg text-base flex items-center justify-center gap-2"
             >
-              👥 フレンド対戦
+              👥 フレンド対戦（リアルタイム）
+            </button>
+            <button
+              onClick={() => setMode('challenge')}
+              className="w-full py-4 bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-bold rounded-2xl shadow-lg text-base flex items-center justify-center gap-2 relative"
+            >
+              📨 チャレンジバトル（非同期）
+              {challengeCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
+                  {challengeCount}
+                </span>
+              )}
+            </button>
+
+            {/* 協力セクション */}
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mt-4">協力</p>
+            <button
+              onClick={() => setMode('coop')}
+              className="w-full py-4 bg-gradient-to-r from-cyan-400 to-teal-400 text-white font-bold rounded-2xl shadow-lg text-base flex items-center justify-center gap-2"
+            >
+              🧹 おそうじリレー（2人協力）
             </button>
           </div>
         )}
@@ -280,6 +331,16 @@ export default function BattlePage() {
           </div>
         )}
       </main>
+
+      {/* チャレンジパネル */}
+      <AnimatePresence>
+        {mode === 'challenge' && (
+          <ChallengePanel
+            onClose={() => { setMode('menu'); setChallengeCount(0); }}
+            myCode={myCode}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

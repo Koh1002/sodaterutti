@@ -449,6 +449,67 @@ export interface Database {
           }
         ];
       };
+      battle_challenges: {
+        Row: {
+          id: string;
+          challenger_id: string;
+          opponent_id: string;
+          challenger_snapshot: Json;
+          opponent_snapshot: Json | null;
+          status: 'pending' | 'accepted' | 'resolved' | 'declined' | 'expired';
+          winner_id: string | null;
+          battle_log: Json | null;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          challenger_id: string;
+          opponent_id: string;
+          challenger_snapshot: Json;
+          status?: string;
+        };
+        Update: {
+          status?: string;
+          opponent_snapshot?: Json;
+          winner_id?: string;
+          battle_log?: Json;
+          resolved_at?: string;
+        };
+        Relationships: [];
+      };
+      coop_rooms: {
+        Row: {
+          id: string;
+          host_id: string;
+          guest_id: string | null;
+          room_code: string;
+          status: 'waiting' | 'playing' | 'finished';
+          game_type: string;
+          host_score: number;
+          guest_score: number;
+          target_score: number;
+          started_at: string | null;
+          finished_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          host_id: string;
+          room_code: string;
+          game_type?: string;
+          target_score?: number;
+        };
+        Update: {
+          guest_id?: string;
+          status?: string;
+          host_score?: number;
+          guest_score?: number;
+          started_at?: string;
+          finished_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -469,6 +530,30 @@ export interface Database {
           cmini_game_play_count: number;
           chunger: number;
           chappiness: number;
+        }[];
+      };
+      send_battle_challenge: {
+        Args: { opponent_friend_code: string; snapshot: Json };
+        Returns: string;
+      };
+      get_pending_challenges: {
+        Args: Record<string, never>;
+        Returns: {
+          challenge_id: string;
+          challenger_user_id: string;
+          challenger_name: string;
+          challenger_snapshot: Json;
+          challenge_created_at: string;
+        }[];
+      };
+      join_coop_room: {
+        Args: { code: string };
+        Returns: {
+          room_id: string;
+          room_host_id: string;
+          room_status: string;
+          room_game_type: string;
+          room_target_score: number;
         }[];
       };
     };

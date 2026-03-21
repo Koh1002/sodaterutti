@@ -129,7 +129,7 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
 
           <motion.div
             animate={controls}
-            className="relative w-40 h-40 cursor-pointer character-shadow"
+            className="relative w-40 h-40 cursor-pointer character-shadow select-none"
             onClick={handleTap}
           >
             <Image

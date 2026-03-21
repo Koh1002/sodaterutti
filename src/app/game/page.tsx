@@ -9,6 +9,7 @@ import { ActionButtons } from '@/components/game/ActionButtons';
 import { MessageToast } from '@/components/game/MessageToast';
 import { NewEggScreen } from '@/components/game/NewEggScreen';
 import { WalkScreen } from '@/components/game/WalkScreen';
+import { LoadingScreen } from '@/components/game/LoadingScreen';
 import { DailyMissionPanel } from '@/components/game/DailyMissionPanel';
 import { AchievementPanel } from '@/components/game/AchievementPanel';
 import { EvolutionScreen } from '@/components/game/EvolutionScreen';
@@ -69,20 +70,7 @@ export default function GamePage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-base-100 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="text-3xl opacity-40"
-          >
-            🥚
-          </motion.div>
-          <p className="text-text-tertiary text-xs tracking-airy">読み込み中...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen isLoading={true} />;
   }
 
   if (!character) {

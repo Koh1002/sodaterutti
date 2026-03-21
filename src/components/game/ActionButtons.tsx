@@ -48,7 +48,7 @@ function BottomSheet({
               <div className="w-9 h-[3px] bg-base-300/50 rounded-full" />
             </div>
             <p className="text-xs text-text-secondary font-medium text-center mb-3 tracking-airy">{title}</p>
-            <div className="px-5 pb-6">
+            <div className="px-5 pb-6 select-none">
               {children}
             </div>
           </motion.div>
@@ -205,12 +205,13 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
           </div>
 
           {/* Floating ドックバー */}
-          <div className="glass rounded-3xl shadow-soft-md mb-1">
+          <div className="glass rounded-3xl shadow-soft-md mb-1 select-none">
             <div className="flex items-center justify-around max-w-md md:max-w-xs mx-auto px-1 py-1.5 md:gap-0">
               {dockActions.map((action) => (
                 <motion.button
                   key={action.label}
-                  whileTap={{ scale: 0.88, y: 1 }}
+                  whileTap={{ scale: 0.90, y: 2 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                   onClick={action.onClick}
                   disabled={action.disabled}
                   className={`flex flex-col items-center justify-center min-w-[50px] md:min-w-[40px] min-h-[48px] md:min-h-[40px] py-1 px-2 md:px-1.5 rounded-2xl transition-all ${
@@ -232,7 +233,8 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
                 </motion.button>
               ))}
               <motion.button
-                whileTap={{ scale: 0.88, y: 1 }}
+                whileTap={{ scale: 0.90, y: 2 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                 onClick={() => { closeAll(); setShowMoreMenu(true); }}
                 className={`flex flex-col items-center justify-center min-w-[50px] md:min-w-[40px] min-h-[48px] md:min-h-[40px] py-1 px-2 md:px-1.5 rounded-2xl transition-all ${
                   showMoreMenu ? 'bg-white/40' : 'active:bg-white/30'

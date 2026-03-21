@@ -545,11 +545,8 @@ export function checkDeath(character: Character, now: Date = new Date()): DeathC
 // =========================================
 
 /** 結婚適齢期かどうかを判定する（アダルト期3日目以降） */
-export function canMarry(character: Character, now: Date = new Date()): boolean {
-  if (character.stage !== 'adult') return false;
-  const stageStarted = new Date(character.stage_started_at);
-  const daysAsAdult = (now.getTime() - stageStarted.getTime()) / (1000 * 60 * 60 * 24);
-  return daysAsAdult >= 3;
+export function canMarry(character: Character): boolean {
+  return character.stage === 'adult';
 }
 
 // =========================================

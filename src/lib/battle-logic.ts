@@ -96,7 +96,7 @@ export const ALL_MOVES: BattleMove[] = [
 // 戦闘計算
 // =========================================
 
-/** キャラクターの「強さ」を計算 (進化時のcareScoreベース) */
+/** キャラクターの「強さ」を計算 (進化時のcareScoreベース + 世代ボーナス) */
 export function calculateStrength(stats: {
   discipline: number;
   care_miss_count: number;
@@ -104,6 +104,8 @@ export function calculateStrength(stats: {
   base_weight: number;
   mini_game_total_score: number;
   mini_game_play_count: number;
+  generation?: number;
+  battleBonus?: number;
 }): number {
   const careMiss = Math.max(0, 100 - (stats.care_miss_count || 0) * 10);
   const disc = stats.discipline || 0;
@@ -112,10 +114,14 @@ export function calculateStrength(stats: {
     ? Math.min(100, ((stats.mini_game_total_score || 0) / stats.mini_game_play_count / 3) * 100)
     : 50;
 
-  const total = Math.round(
+  const base = Math.round(
     careMiss * 0.3 + disc * 0.25 + weightDiff * 0.15 + avgGame * 0.15 + 50 * 0.15
   );
-  return Math.max(1, Math.min(100, total));
+
+  // 世代ボーナス: gene.battleBonus から引き継いだ値（最大15）
+  const inheritedBonus = Math.min(15, Math.max(0, stats.battleBonus || 0));
+
+  return Math.max(1, Math.min(100, base + inheritedBonus));
 }
 
 /** 技の出力を計算: 強さ × お腹% × なつき度(happiness)% */

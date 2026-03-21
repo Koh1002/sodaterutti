@@ -217,11 +217,31 @@ export const useGameStore = create<GameState>((set, get) => ({
     const generation = histList.length > 0 ? histList[0].generation + 1 : 1;
     const parentCharId = histList.length > 0 ? histList[0].id : null;
 
-    const gene = parentGene || {
-      bodyColor: gender === 'male' ? 'blue' : 'pink',
-      eyeType: 'round',
-      personality: 'neutral',
-    };
+    // 親の gene を取得（死亡後の代替わり用）
+    let gene: Record<string, string | number>;
+    if (parentGene) {
+      gene = parentGene;
+    } else {
+      // 結婚以外（死亡後など）の場合、直前の親の gene から battleBonus を引き継ぐ
+      let prevBattleBonus = 0;
+      if (histList.length > 0) {
+        const parentHistoryId = histList[0].id;
+        const { data: parentHistory } = await supabase
+          .from('character_history')
+          .select('gene')
+          .eq('id', parentHistoryId)
+          .single();
+        const prevGene = (parentHistory?.gene as Record<string, unknown>) || {};
+        prevBattleBonus = typeof prevGene.battleBonus === 'number' ? prevGene.battleBonus : 0;
+      }
+      gene = {
+        bodyColor: gender === 'male' ? 'blue' : 'pink',
+        eyeType: 'round',
+        personality: 'neutral',
+        // 死亡後でも世代ボーナスを引き継ぐ（+3はなし、維持のみ）
+        battleBonus: Math.min(15, prevBattleBonus),
+      };
+    }
     // 遺伝スコアが未設定なら初回ランダム生成（0-100）
     if (typeof gene.geneticsScore !== 'number') {
       gene.geneticsScore = Math.round(Math.random() * 100);
@@ -459,6 +479,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     const avgScore = (parentScore + partnerScore) / 2;
     const mutation = (Math.random() - 0.5) * 40; // -20〜+20
     childGene.geneticsScore = Math.round(Math.max(0, Math.min(100, avgScore + mutation)));
+
+    // バトルボーナス: 親から+3を引き継ぎ（最大15）
+    const parentBattleBonus = typeof parentGene?.battleBonus === 'number' ? parentGene.battleBonus : 0;
+    childGene.battleBonus = Math.min(15, parentBattleBonus + 3);
 
     // 突然変異（5%の確率）
     if (Math.random() < 0.05) {

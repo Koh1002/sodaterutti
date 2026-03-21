@@ -73,6 +73,7 @@ export default function BattlePage() {
   }
 
   const baseWeight = species.base_weight;
+  const charGene = character.gene as Record<string, unknown> | null;
   const strength = calculateStrength({
     discipline: character.discipline,
     care_miss_count: character.care_miss_count,
@@ -80,6 +81,7 @@ export default function BattlePage() {
     base_weight: baseWeight,
     mini_game_total_score: character.mini_game_total_score,
     mini_game_play_count: character.mini_game_play_count,
+    battleBonus: typeof charGene?.battleBonus === 'number' ? charGene.battleBonus : 0,
   });
 
   const startCpuBattle = (difficulty: 'easy' | 'normal' | 'hard') => {
@@ -117,6 +119,7 @@ export default function BattlePage() {
         const fc = friendChar[0];
         const friendSpecies = allSpecies.find(s => s.id === fc.cspecies_id);
         if (friendSpecies) {
+          const friendGene = fc.cgene as Record<string, unknown> | null;
           const friendStrength = calculateStrength({
             discipline: fc.cdiscipline,
             care_miss_count: fc.ccare_miss_count,
@@ -124,6 +127,7 @@ export default function BattlePage() {
             base_weight: friendSpecies.base_weight,
             mini_game_total_score: fc.cmini_game_total_score,
             mini_game_play_count: fc.cmini_game_play_count,
+            battleBonus: typeof friendGene?.battleBonus === 'number' ? friendGene.battleBonus : 0,
           });
 
           const player = createBattler(

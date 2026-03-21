@@ -530,6 +530,7 @@ export interface Database {
           cmini_game_play_count: number;
           chunger: number;
           chappiness: number;
+          cgene: Json;
         }[];
       };
       send_battle_challenge: {

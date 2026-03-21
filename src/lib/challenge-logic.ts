@@ -31,9 +31,10 @@ export interface PendingChallenge {
 
 /** 自分のキャラのスナップショットを作成 */
 export function createSnapshot(
-  character: { name: string; hunger: number; happiness: number; discipline: number; care_miss_count: number; weight: number; mini_game_total_score: number; mini_game_play_count: number },
+  character: { name: string; hunger: number; happiness: number; discipline: number; care_miss_count: number; weight: number; mini_game_total_score: number; mini_game_play_count: number; gene?: unknown },
   species: { name: string; image_key: string; base_weight: number },
 ): ChallengerSnapshot {
+  const charGene = character.gene as Record<string, unknown> | null;
   const strength = calculateStrength({
     discipline: character.discipline,
     care_miss_count: character.care_miss_count,
@@ -41,6 +42,7 @@ export function createSnapshot(
     base_weight: species.base_weight,
     mini_game_total_score: character.mini_game_total_score,
     mini_game_play_count: character.mini_game_play_count,
+    battleBonus: typeof charGene?.battleBonus === 'number' ? charGene.battleBonus : 0,
   });
   return {
     name: character.name || species.name,

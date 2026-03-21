@@ -42,7 +42,8 @@ RETURNS TABLE(
   cmini_game_total_score INT,
   cmini_game_play_count INT,
   chunger INT,
-  chappiness INT
+  chappiness INT,
+  cgene JSONB
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -56,7 +57,8 @@ BEGIN
       characters.mini_game_total_score,
       characters.mini_game_play_count,
       characters.hunger,
-      characters.happiness
+      characters.happiness,
+      characters.gene
     FROM characters
     WHERE characters.user_id = friend_user_id
       AND characters.is_alive = true

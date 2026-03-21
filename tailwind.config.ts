@@ -30,9 +30,9 @@ const config: Config = {
           mauve: '#B5A0A8',   // モーヴ
         },
         text: {
-          primary: '#4A4A4A',    // メインテキスト
-          secondary: '#7A7A7A',  // サブテキスト
-          tertiary: '#A0A0A0',   // 補助テキスト
+          primary: '#3A3A3A',    // メインテキスト（視認性強化）
+          secondary: '#6A6A6A',  // サブテキスト（視認性強化）
+          tertiary: '#888888',   // 補助テキスト（視認性強化）
           inverse: '#FEFEFE',    // 反転テキスト
         },
       },

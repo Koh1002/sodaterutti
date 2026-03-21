@@ -470,15 +470,17 @@ export interface EvolutionRule {
   priority: number;
 }
 
-/** 進化ルールに基づいて進化先を決定する */
+/** 進化ルールに基づいて進化先を決定する（ランダム性あり） */
 export function determineEvolution(
   character: Character,
   careScore: number,
   rules: EvolutionRule[]
 ): string | null {
   const applicableRules = rules
-    .filter(r => r.from_species_id === character.species_id)
-    .sort((a, b) => b.priority - a.priority);
+    .filter(r => r.from_species_id === character.species_id);
+
+  // 条件に合致するルールをすべて収集
+  const matchedRules: EvolutionRule[] = [];
 
   for (const rule of applicableRules) {
     const cond = rule.condition;
@@ -490,10 +492,24 @@ export function determineEvolution(
     if (cond.max_discipline !== undefined && character.discipline > cond.max_discipline) matches = false;
     if (cond.min_generation !== undefined && character.generation < cond.min_generation) matches = false;
 
-    if (matches) return rule.to_species_id;
+    if (matches) matchedRules.push(rule);
   }
 
-  return null;
+  if (matchedRules.length === 0) return null;
+
+  // priorityを重みとして使い、加重ランダム選択する
+  // priority が高いほど選ばれやすいが、確定ではない
+  const totalWeight = matchedRules.reduce((sum, r) => sum + r.priority, 0);
+  const roll = Math.random() * totalWeight;
+  let cumulative = 0;
+
+  for (const rule of matchedRules) {
+    cumulative += rule.priority;
+    if (roll < cumulative) return rule.to_species_id;
+  }
+
+  // フォールバック: 最後のルールを返す
+  return matchedRules[matchedRules.length - 1].to_species_id;
 }
 
 // =========================================

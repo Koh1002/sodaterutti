@@ -68,13 +68,13 @@ export function getBackgroundForTime(hour: number): string {
   return `${IMAGE_BASE_PATH}/bg_night.png`;
 }
 
-/** 背景プレースホルダーを時間帯で返す */
+/** 背景プレースホルダーを時間帯で返す（ニュアンスカラー） */
 export function getBackgroundPlaceholder(hour: number): string {
   const configs: Record<string, { bg: string; sky: string }> = {
-    morning: { bg: '#FFF5E6', sky: '#FFB347' },
-    afternoon: { bg: '#E8F5E9', sky: '#87CEEB' },
-    evening: { bg: '#FBE9E7', sky: '#FF7043' },
-    night: { bg: '#1A237E', sky: '#0D1B2A' },
+    morning: { bg: '#FFFDF8', sky: '#FFF3D6' },     // クリーム〜ウォームホワイト
+    afternoon: { bg: '#F4F7F4', sky: '#E8EFE8' },    // セージ系の淡いグリーン
+    evening: { bg: '#FFF5F5', sky: '#F5CDD0' },      // ダスティピンク
+    night: { bg: '#3D3A38', sky: '#2A2725' },         // ウォームダーク
   };
 
   let period = 'night';

@@ -23,8 +23,8 @@ export function MessageToast() {
           exit={{ opacity: 0, y: -20 }}
           className="fixed top-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none"
         >
-          <div className="bg-white/95 backdrop-blur-sm shadow-lg rounded-2xl px-6 py-3 border border-purple-100 max-w-xs text-center">
-            <p className="text-sm text-gray-700 font-medium">{message}</p>
+          <div className="glass-warm shadow-sm rounded-2xl px-6 py-3 max-w-xs text-center">
+            <p className="text-xs text-warm-600 font-medium tracking-relaxed">{message}</p>
           </div>
         </motion.div>
       )}

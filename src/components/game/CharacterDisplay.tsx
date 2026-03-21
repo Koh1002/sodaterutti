@@ -18,15 +18,10 @@ interface CharacterDisplayProps {
 
 // タッチ時のリアクションアニメーション
 const touchReactions = [
-  // ぴょんぴょんジャンプ
   { y: [0, -30, 0, -15, 0], rotate: 0, x: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' as const } },
-  // 横にごろごろ
   { rotate: [0, 15, -15, 10, -10, 0], x: [0, 10, -10, 5, -5, 0], y: 0, scale: 1, transition: { duration: 0.7, ease: 'easeInOut' as const } },
-  // くるっと回転
   { rotate: [0, 360], scale: [1, 1.15, 1], y: 0, x: 0, transition: { duration: 0.5, ease: 'easeInOut' as const } },
-  // ぷるぷる震える
   { x: [0, -5, 5, -5, 5, -3, 3, 0], y: 0, rotate: 0, scale: 1, transition: { duration: 0.4 } },
-  // 大きくはねる
   { y: [0, -40, 0], scale: [1, 1.2, 1], rotate: 0, x: 0, transition: { duration: 0.5, type: 'spring' as const, stiffness: 300 } },
 ];
 
@@ -39,7 +34,6 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
     ? getPlaceholderSvg(imageKey)
     : getCharacterImagePath(imageKey);
 
-  // 通常アニメーション定義
   const getIdleAnimation = useCallback(() => {
     if (character.is_sleeping) {
       return {
@@ -59,22 +53,18 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
     };
   }, [character.is_sleeping, character.is_sick]);
 
-  // アイドルアニメーション開始
   useEffect(() => {
     if (!reactingRef.current) {
       controls.start(getIdleAnimation());
     }
   }, [controls, getIdleAnimation]);
 
-  // タッチ時のリアクション
   const handleTap = useCallback(async () => {
     if (reactingRef.current || character.is_sleeping) return;
     reactingRef.current = true;
 
-    // ランダムにリアクションを選択
     const reaction = touchReactions[Math.floor(Math.random() * touchReactions.length)];
     await controls.start(reaction);
-    // 通常アニメーションに戻す
     controls.start(getIdleAnimation());
     reactingRef.current = false;
 
@@ -83,23 +73,23 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
 
   return (
     <div className="relative flex flex-col items-center w-full">
-      {/* 名前 + ステージ情報（1行にまとめてコンパクトに） */}
-      <div className="mb-1 text-center flex items-center gap-2">
-        <span className="text-lg font-bold text-purple-700">
+      {/* 名前 + ステージ情報 */}
+      <div className="mb-2 text-center flex items-center gap-2">
+        <span className="text-base font-medium text-warm-700 tracking-relaxed">
           {character.name || species?.name || '???'}
         </span>
         {species && (
-          <span className="text-xs text-gray-400">
+          <span className="text-[10px] text-warm-400 tracking-relaxed">
             ({species.name})
           </span>
         )}
-        <span className="text-xs text-gray-400">
+        <span className="text-[10px] text-warm-400 tracking-relaxed">
           {stageLabel(character.stage)}
         </span>
       </div>
 
       {/* 部屋の背景 + キャラクター */}
-      <div className="relative w-full max-w-sm aspect-[3/2] rounded-2xl overflow-hidden shadow-inner">
+      <div className="relative w-full max-w-sm aspect-[3/2] rounded-2xl overflow-hidden shadow-sm border border-white/30">
         {/* 部屋背景画像 */}
         <Image
           src="/images/bg_room.png"
@@ -122,52 +112,52 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
               width={160}
               height={160}
               onError={() => setImgError(true)}
-              className="object-contain drop-shadow-lg"
+              className="object-contain drop-shadow-md"
               priority
             />
 
-            {/* 睡眠中のzzz表示 */}
+            {/* 睡眠中表示 */}
             {character.is_sleeping && (
               <motion.span
-                className="absolute -top-2 -right-2 text-2xl"
-                animate={{ opacity: [0, 1, 0], y: [0, -10, -20] }}
+                className="absolute -top-2 -right-2 text-lg opacity-60"
+                animate={{ opacity: [0.3, 0.7, 0.3], y: [0, -8, -16] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                💤
+                zzz
               </motion.span>
             )}
 
             {/* 病気表示 */}
             {character.is_sick && (
-              <motion.span
-                className="absolute -top-2 -right-2 text-2xl"
-                animate={{ scale: [1, 1.2, 1] }}
+              <motion.div
+                className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-dusty-200/80 flex items-center justify-center"
+                animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
-                🤒
-              </motion.span>
+                <span className="text-xs">✕</span>
+              </motion.div>
             )}
           </motion.div>
         </div>
 
         {/* うんち表示 */}
         {character.poop_count > 0 && (
-          <div className="absolute bottom-3 right-4 flex gap-1">
+          <div className="absolute bottom-3 right-4 flex gap-1.5">
             {Array.from({ length: Math.min(character.poop_count, 3) }).map((_, i) => (
-              <motion.span
+              <motion.div
                 key={i}
-                className="text-xl"
+                className="w-4 h-4 rounded-full bg-warm-400/40 flex items-center justify-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: i * 0.2 }}
               >
-                💩
-              </motion.span>
+                <span className="text-[10px]">●</span>
+              </motion.div>
             ))}
           </div>
         )}
 
-        {/* つぶやき（部屋の下部にオーバーレイ） */}
+        {/* つぶやき */}
         <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
           <MumbleDisplay />
         </div>

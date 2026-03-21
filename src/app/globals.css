@@ -1,12 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  color: #171717;
-  background: #ffffff;
-  font-family: 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', 'Kosugi Maru', -apple-system, 'Hiragino Sans', 'Segoe UI', Meiryo, sans-serif;
+  color: #4A3F33;
+  background: #FAF8F5;
+  font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Rounded Mplus 1c', sans-serif;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.06em;
 }
 
 @keyframes slide-up {
@@ -27,4 +30,19 @@ body {
 /* セーフエリア対応 */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+/* グラスモーフィズム共通 */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.glass-warm {
+  background: rgba(250, 248, 245, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(235, 225, 210, 0.5);
 }

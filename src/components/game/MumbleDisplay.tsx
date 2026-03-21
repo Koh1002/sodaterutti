@@ -19,14 +19,11 @@ export function MumbleDisplay() {
       if (text) {
         setMumble(text);
         setVisible(true);
-        // 5秒後に消す
         setTimeout(() => setVisible(false), 5000);
       }
     };
 
-    // 初回表示（1秒後）
     const initialTimer = setTimeout(showMumble, 1000);
-    // 15-30秒おきにつぶやく
     const interval = setInterval(() => {
       const delay = 15000 + Math.random() * 15000;
       setTimeout(showMumble, delay);
@@ -45,11 +42,10 @@ export function MumbleDisplay() {
           initial={{ opacity: 0, y: 10, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.9 }}
-          className="relative bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-md border border-purple-100 max-w-[200px]"
+          className="relative glass-warm rounded-xl px-3 py-1.5 shadow-sm max-w-[200px]"
         >
-          {/* 吹き出しの三角（上向き：キャラの方を指す） */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/90 border-t border-l border-purple-100 rotate-45" />
-          <p className="text-sm text-gray-700 text-center relative z-10">{mumble}</p>
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-[rgba(250,248,245,0.65)] border-t border-l border-warm-200/50 rotate-45" />
+          <p className="text-xs text-warm-600 text-center relative z-10 tracking-relaxed">{mumble}</p>
         </motion.div>
       )}
     </AnimatePresence>

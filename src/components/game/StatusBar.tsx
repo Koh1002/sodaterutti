@@ -12,43 +12,44 @@ export function StatusBar({ label, value, maxValue = 100, color, icon }: StatusB
   const percentage = Math.round((value / maxValue) * 100);
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-lg w-6 text-center shrink-0" role="img" aria-label={label}>{icon}</span>
-      <div className="flex-1 bg-black/10 rounded-full h-2.5 overflow-hidden">
+    <div className="flex items-center gap-2.5">
+      <span className="text-base w-5 text-center shrink-0" role="img" aria-label={label}>{icon}</span>
+      <div className="flex-1 bg-warm-200/50 rounded-full h-1.5 overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${color}`}
-          style={{ width: `${percentage}%` }}
+          className="h-full rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${percentage}%`, backgroundColor: color }}
         />
       </div>
-      <span className="text-[11px] text-white/80 w-7 text-right font-medium tabular-nums">{value}</span>
+      <span className="text-[10px] text-warm-500 w-7 text-right font-medium tabular-nums tracking-relaxed">{value}</span>
     </div>
   );
 }
 
-/** コンパクトなステータスインジケーター（ボトムドック上に表示） */
+/** コンパクトなミニマルステータス（ドット＋細バー） */
 export function CompactStatus({ icon, value, label, color }: { icon: string; value: number; label: string; color: string }) {
-  const radius = 18;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (value / 100) * circumference;
+  // 5段階のドット表示
+  const dots = 5;
+  const filledDots = Math.round((value / 100) * dots);
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-12 h-12 flex items-center justify-center">
-        {/* 背景リング */}
-        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
-          <circle cx="22" cy="22" r={radius} fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="3.5" />
-          <circle
-            cx="22" cy="22" r={radius} fill="none"
-            stroke={color} strokeWidth="3.5"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            strokeLinecap="round"
-            className="transition-all duration-500"
+    <div className="flex flex-col items-center gap-1">
+      {/* アイコン */}
+      <span className="text-sm leading-none opacity-70">{icon}</span>
+      {/* ドットゲージ */}
+      <div className="flex gap-[3px]">
+        {Array.from({ length: dots }).map((_, i) => (
+          <div
+            key={i}
+            className="w-[5px] h-[5px] rounded-full transition-all duration-500"
+            style={{
+              backgroundColor: i < filledDots ? color : 'rgba(0,0,0,0.08)',
+              opacity: i < filledDots ? 1 : 0.5,
+            }}
           />
-        </svg>
-        <span className="text-base leading-none">{icon}</span>
+        ))}
       </div>
-      <span className="text-[10px] text-gray-500 font-medium mt-0.5">{label}</span>
+      {/* ラベル */}
+      <span className="text-[9px] text-warm-400 font-medium tracking-airy">{label}</span>
     </div>
   );
 }

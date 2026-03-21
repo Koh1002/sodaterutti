@@ -72,10 +72,10 @@ export default function GamePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-pink-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-cream-100 to-warm-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="text-4xl animate-bounce">🥚</div>
-          <p className="text-gray-500 font-medium">読み込み中...</p>
+          <div className="text-3xl animate-bounce opacity-60">🥚</div>
+          <p className="text-warm-400 font-medium text-sm tracking-relaxed">読み込み中...</p>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ export default function GamePage() {
       className="min-h-screen flex flex-col"
       style={{ background: bgGradient }}
     >
-      {/* ヘッダー（ミニマル・半透明） */}
+      {/* ヘッダー */}
       <GameHeader
         onOpenMissions={() => setShowMissions(true)}
         onOpenAchievements={() => setShowAchievements(true)}
@@ -120,32 +120,32 @@ export default function GamePage() {
           <CharacterDisplay character={character} species={species} />
         </div>
 
-        {/* 体重・しつけ・ステージ情報 */}
-        <div className="flex flex-wrap justify-center gap-2 mt-2">
-          <span className="bg-black/15 backdrop-blur-sm text-white text-sm font-semibold px-3.5 py-1.5 rounded-full shadow-sm">
+        {/* 体重・しつけ（グラスモーフィズムバッジ） */}
+        <div className="flex flex-wrap justify-center gap-2 mt-3">
+          <span className="glass rounded-full text-warm-600 text-xs font-medium px-4 py-1.5 shadow-sm tracking-relaxed">
             体重 {character.weight}g
           </span>
-          <span className="bg-black/15 backdrop-blur-sm text-white text-sm font-semibold px-3.5 py-1.5 rounded-full shadow-sm">
+          <span className="glass rounded-full text-warm-600 text-xs font-medium px-4 py-1.5 shadow-sm tracking-relaxed">
             しつけ {character.discipline}/100
           </span>
         </div>
 
         {/* 結婚適齢期の通知 */}
         {isMarriageEligible && (
-          <div className="w-full mt-3">
+          <div className="w-full mt-4">
             <button
               onClick={() => loadMarriageCandidates()}
-              className="w-full py-3.5 bg-white/85 backdrop-blur-md text-pink-500 font-bold rounded-2xl shadow-sm hover:bg-white/95 active:scale-[0.98] transition flex items-center justify-center gap-2 text-base border border-pink-200/50"
+              className="w-full py-3.5 glass rounded-2xl text-dusty-500 font-medium shadow-sm hover:bg-white/70 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm tracking-relaxed border border-dusty-200/30"
             >
-              <span>💒</span>
-              <span>結婚できるよ！</span>
-              <span>💕</span>
+              <span className="opacity-60">♡</span>
+              <span>結婚できるよ</span>
+              <span className="opacity-60">♡</span>
             </button>
           </div>
         )}
       </main>
 
-      {/* ボトムドック（固定位置・ActionButtons内で描画） */}
+      {/* ボトムドック */}
       <ActionButtons onWalk={handleWalk} />
 
       {/* おさんぽ画面 */}
@@ -198,9 +198,9 @@ function NamingScreen({ onName }: { onName: (name: string) => Promise<void> }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-cream-100 to-dusty-50 flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="text-center space-y-6 w-full max-w-sm"
       >
@@ -208,14 +208,14 @@ function NamingScreen({ onName }: { onName: (name: string) => Promise<void> }) {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', duration: 0.8 }}
-          className="text-8xl"
+          className="text-6xl opacity-70"
         >
-          🎉
+          ✧
         </motion.div>
-        <h2 className="text-2xl font-bold text-purple-600">
-          あたらしい子が生まれた！
+        <h2 className="text-xl font-medium text-warm-700 tracking-relaxed">
+          あたらしい子が生まれた
         </h2>
-        <p className="text-gray-500">
+        <p className="text-warm-400 text-sm tracking-relaxed">
           名前をつけてあげましょう
         </p>
         <input
@@ -224,14 +224,14 @@ function NamingScreen({ onName }: { onName: (name: string) => Promise<void> }) {
           onChange={(e) => setName(e.target.value)}
           maxLength={30}
           placeholder="名前を入力（省略可）"
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none text-center"
+          className="w-full px-4 py-3 border border-warm-200 rounded-xl focus:ring-2 focus:ring-dusty-300 focus:border-transparent outline-none text-center bg-white/60 backdrop-blur-sm text-warm-700 placeholder:text-warm-300 tracking-relaxed"
         />
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full py-3 bg-purple-500 text-white font-bold rounded-xl hover:bg-purple-600 transition shadow-lg disabled:opacity-50"
+          className="w-full py-3 bg-dusty-400 text-white font-medium rounded-xl hover:bg-dusty-500 transition shadow-sm disabled:opacity-50 tracking-relaxed"
         >
-          {name ? `「${name}」に決定！` : 'スキップして始める'}
+          {name ? `「${name}」に決定` : 'スキップして始める'}
         </button>
       </motion.div>
     </div>

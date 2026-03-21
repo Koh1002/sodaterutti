@@ -188,7 +188,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
     <>
       {/* ===== Floating Bottom Dock ===== */}
       <div className="fixed bottom-0 left-0 right-0 z-30 px-3 pb-safe">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-lg md:max-w-sm mx-auto">
           {/* コンパクトステータス */}
           <div className="flex justify-center gap-5 px-4 pb-2">
             <CompactStatus icon="◐" value={character.hunger} label="お腹" color={statusColors.hunger} />
@@ -206,14 +206,14 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 
           {/* Floating ドックバー */}
           <div className="glass rounded-3xl shadow-soft-md mb-1">
-            <div className="flex items-center justify-around max-w-md mx-auto px-1 py-1.5">
+            <div className="flex items-center justify-around max-w-md md:max-w-xs mx-auto px-1 py-1.5 md:gap-0">
               {dockActions.map((action) => (
                 <motion.button
                   key={action.label}
                   whileTap={{ scale: 0.88, y: 1 }}
                   onClick={action.onClick}
                   disabled={action.disabled}
-                  className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 px-2 rounded-2xl transition-all ${
+                  className={`flex flex-col items-center justify-center min-w-[50px] md:min-w-[40px] min-h-[48px] md:min-h-[40px] py-1 px-2 md:px-1.5 rounded-2xl transition-all ${
                     action.disabled
                       ? 'opacity-20 cursor-not-allowed'
                       : action.active
@@ -224,7 +224,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
                   <span className={`transition-transform ${action.active ? 'scale-110 text-muted-blue' : 'text-text-secondary'}`}>
                     <ActionIcon type={action.icon} />
                   </span>
-                  <span className={`text-[9px] font-medium mt-0.5 tracking-relaxed transition-colors ${
+                  <span className={`text-[9px] font-medium mt-0.5 md:mt-0 tracking-relaxed transition-colors ${
                     action.active ? 'text-muted-blue' : 'text-text-tertiary'
                   }`}>
                     {action.label}
@@ -234,14 +234,14 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
               <motion.button
                 whileTap={{ scale: 0.88, y: 1 }}
                 onClick={() => { closeAll(); setShowMoreMenu(true); }}
-                className={`flex flex-col items-center justify-center min-w-[50px] min-h-[48px] py-1 px-2 rounded-2xl transition-all ${
+                className={`flex flex-col items-center justify-center min-w-[50px] md:min-w-[40px] min-h-[48px] md:min-h-[40px] py-1 px-2 md:px-1.5 rounded-2xl transition-all ${
                   showMoreMenu ? 'bg-white/40' : 'active:bg-white/30'
                 }`}
               >
                 <span className={showMoreMenu ? 'text-muted-blue' : 'text-text-secondary'}>
                   <ActionIcon type="more" />
                 </span>
-                <span className={`text-[9px] font-medium mt-0.5 tracking-relaxed ${
+                <span className={`text-[9px] font-medium mt-0.5 md:mt-0 tracking-relaxed ${
                   showMoreMenu ? 'text-muted-blue' : 'text-text-tertiary'
                 }`}>
                   その他

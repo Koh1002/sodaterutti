@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/stores/game-store';
 import { GameHeader } from '@/components/game/GameHeader';
 import { CharacterDisplay } from '@/components/game/CharacterDisplay';
-import { StatusBar } from '@/components/game/StatusBar';
 import { ActionButtons } from '@/components/game/ActionButtons';
 import { MessageToast } from '@/components/game/MessageToast';
 import { NewEggScreen } from '@/components/game/NewEggScreen';
@@ -45,7 +44,6 @@ export default function GamePage() {
     const interval = setInterval(() => {
       recalculateStatus();
       setCurrentHour(new Date().getHours());
-      // ステータス低下時のプッシュ通知チェック
       const current = useGameStore.getState().character;
       if (current) {
         checkStatNotifications({
@@ -108,13 +106,15 @@ export default function GamePage() {
       className="min-h-screen flex flex-col"
       style={{ background: bgGradient }}
     >
+      {/* ヘッダー（ミニマル・半透明） */}
       <GameHeader
         onOpenMissions={() => setShowMissions(true)}
         onOpenAchievements={() => setShowAchievements(true)}
       />
       <MessageToast />
 
-      <main className="flex-1 flex flex-col items-center justify-between max-w-lg mx-auto w-full px-4 pt-2 pb-6">
+      {/* メインコンテンツ - キャラ表示が画面の大部分を占める */}
+      <main className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full px-4 pb-36">
         {/* キャラクター表示エリア */}
         <div className="flex-1 flex items-center justify-center w-full">
           <CharacterDisplay character={character} species={species} />
@@ -122,10 +122,10 @@ export default function GamePage() {
 
         {/* 結婚適齢期の通知 */}
         {isMarriageEligible && (
-          <div className="w-full mb-3">
+          <div className="w-full mt-2">
             <button
               onClick={() => loadMarriageCandidates()}
-              className="w-full py-3.5 bg-gradient-to-r from-pink-400 to-rose-400 text-white font-bold rounded-2xl shadow-lg hover:from-pink-500 hover:to-rose-500 transition flex items-center justify-center gap-2 text-base"
+              className="w-full py-3 bg-white/80 backdrop-blur-md text-pink-500 font-bold rounded-2xl shadow-sm hover:bg-white/90 transition flex items-center justify-center gap-2 text-sm border border-pink-200/50"
             >
               <span>💒</span>
               <span>結婚できるよ！</span>
@@ -134,24 +134,19 @@ export default function GamePage() {
           </div>
         )}
 
-        {/* ステータスバー */}
-        <div className="w-full space-y-2.5 mb-4 bg-white/70 backdrop-blur-sm rounded-2xl p-4 shadow-sm">
-          <StatusBar label="お腹" value={character.hunger} color="bg-orange-400" icon="🍔" />
-          <StatusBar label="気持ち" value={character.happiness} color="bg-pink-400" icon="💕" />
-          <StatusBar label="体力" value={character.stamina} color="bg-green-400" icon="💪" />
-          <StatusBar label="清潔" value={character.cleanliness} color="bg-blue-400" icon="✨" />
-          <div className="flex justify-between text-sm text-gray-500 pt-1 font-medium">
-            <span>体重: {character.weight}g</span>
-            <span>しつけ: {character.discipline}/100</span>
-            {character.is_sick && <span className="text-red-500 font-bold">🤒 病気中</span>}
-          </div>
-        </div>
-
-        {/* アクションボタン */}
-        <div className="w-full">
-          <ActionButtons onWalk={handleWalk} />
+        {/* 体重・しつけ（コンパクト表示） */}
+        <div className="flex gap-3 mt-3">
+          <span className="bg-white/30 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+            体重 {character.weight}g
+          </span>
+          <span className="bg-white/30 backdrop-blur-sm text-white text-xs font-medium px-3 py-1 rounded-full">
+            しつけ {character.discipline}
+          </span>
         </div>
       </main>
+
+      {/* ボトムドック（固定位置・ActionButtons内で描画） */}
+      <ActionButtons onWalk={handleWalk} />
 
       {/* おさんぽ画面 */}
       <AnimatePresence>

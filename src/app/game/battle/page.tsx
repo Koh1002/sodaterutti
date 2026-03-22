@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { AnimatePresence } from 'framer-motion';
@@ -27,6 +27,18 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 type Species = Database['public']['Tables']['species']['Row'];
 
 export default function BattlePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex items-center justify-center">
+        <p className="text-gray-500 text-2xl animate-bounce">🥚</p>
+      </div>
+    }>
+      <BattlePageContent />
+    </Suspense>
+  );
+}
+
+function BattlePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { character, species, loadCharacter, setMessage } = useGameStore();
@@ -80,7 +92,8 @@ export default function BattlePage() {
     if (realtimeId && role === 'guest') {
       startRealtimeBattleAsGuest(realtimeId);
     }
-  }, [isLoading, character, species, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, searchParams]);
 
   if (isLoading) {
     return (
@@ -334,7 +347,7 @@ export default function BattlePage() {
         <button
           onClick={() => {
             if (waitingForAccept) cancelWaiting();
-            mode === 'menu' ? router.push('/game') : setMode('menu');
+            if (mode === 'menu') { router.push('/game'); } else { setMode('menu'); }
           }}
           className="text-white hover:text-white/80 mr-3 font-bold"
         >

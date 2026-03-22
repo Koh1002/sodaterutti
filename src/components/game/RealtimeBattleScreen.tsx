@@ -41,7 +41,7 @@ export function RealtimeBattleScreen({
   const [opponent, setOpponent] = useState<Battler>({ ...initialOpponent });
   const [phase, setPhase] = useState<BattlePhase>('select');
   const [log, setLog] = useState<LogEntry[]>([{ text: 'リアルタイムバトル開始！' }]);
-  const [effectEmoji, setEffectEmoji] = useState<{ emoji: string; target: 'player' | 'opponent' } | null>(null);
+  const [effectEmoji] = useState<{ emoji: string; target: 'player' | 'opponent' } | null>(null);
   const [winner, setWinner] = useState<'player' | 'opponent' | null>(null);
   const [turn, setTurn] = useState(1);
 
@@ -59,14 +59,6 @@ export function RealtimeBattleScreen({
   const addLog = useCallback((entries: LogEntry[]) => {
     setLog(prev => [...prev, ...entries]);
   }, []);
-
-  const showEffect = (emoji: string, target: 'player' | 'opponent') => {
-    setEffectEmoji({ emoji, target });
-    return new Promise<void>(resolve => setTimeout(() => {
-      setEffectEmoji(null);
-      resolve();
-    }, 600));
-  };
 
   // ホスト側: ターン計算（両者の技が揃ったら実行）
   const executeTurnAsHost = useCallback(async (
@@ -136,6 +128,7 @@ export function RealtimeBattleScreen({
 
     // ローカルに結果適用
     applyTurnResult(result);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ターン結果をUIに適用

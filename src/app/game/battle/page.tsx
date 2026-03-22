@@ -17,7 +17,7 @@ import {
 import { createSnapshot, type ChallengerSnapshot } from '@/lib/challenge-logic';
 import {
   createBattleInvite, notifyInvite,
-  subscribeToBattle, type BattleEvent,
+  type BattleEvent,
 } from '@/lib/realtime-battle-logic';
 import { getPendingChallenges } from '@/lib/challenge-logic';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
@@ -60,6 +60,7 @@ function BattlePageContent() {
   const [realtimeSessionId, setRealtimeSessionId] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(true);
   const [opponentUserId, setOpponentUserId] = useState('');
+  const [mySnapshot, setMySnapshot] = useState<ChallengerSnapshot | null>(null);
   const waitChannelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
@@ -170,35 +171,45 @@ function BattlePageContent() {
     }
 
     // バトルチャンネルでゲスト参加を待機
-    const channel = subscribeToBattle(result.sessionId, (event: BattleEvent) => {
-      if (event.type === 'guest_joined') {
-        // ゲストが参加 → バトル開始
-        const guestSnap = event.guestSnapshot;
-        const guestSpecies = allSpecies.find(s => s.name === guestSnap.speciesName);
-
-        const player = createBattler(
-          character.name || species.name,
-          species.name, species.image_key,
-          strength, character.hunger, character.happiness,
-        );
-        const opp = createBattler(
-          guestSnap.name, guestSnap.speciesName,
-          guestSpecies?.image_key || 'adult_mamecchi',
-          guestSnap.strength, guestSnap.hungerPercent, guestSnap.happinessPercent,
-        );
-
-        setPlayerBattler(player);
-        setOpponentBattler(opp);
-        setWaitingForAccept(false);
-
-        // 待機チャンネルをクリーンアップ
-        const supabase = createClient();
-        supabase.removeChannel(channel);
-        waitChannelRef.current = null;
-
-        setMode('realtime-battle');
-      }
+    // RealtimeBattleScreen は battle-game:${id} を使うので、
+    // ここでは同じチャンネル名で待機する（ゲストが接続時にguest_joinedを送る）
+    const supabase2 = createClient();
+    const channel = supabase2.channel(`battle-game:${result.sessionId}`, {
+      config: { broadcast: { self: true } },
     });
+    channel
+      .on('broadcast', { event: 'battle_event' }, ({ payload }) => {
+        const event = payload as BattleEvent;
+        if (event.type === 'guest_joined') {
+          // ゲストが参加 → バトル開始
+          const guestSnap = event.guestSnapshot;
+          const guestSpecies = allSpecies.find(s => s.name === guestSnap.speciesName);
+
+          const player = createBattler(
+            character.name || species.name,
+            species.name, species.image_key,
+            strength, character.hunger, character.happiness,
+          );
+          const opp = createBattler(
+            guestSnap.name, guestSnap.speciesName,
+            guestSpecies?.image_key || 'adult_mamecchi',
+            guestSnap.strength, guestSnap.hungerPercent, guestSnap.happinessPercent,
+          );
+
+          setPlayerBattler(player);
+          setOpponentBattler(opp);
+          setWaitingForAccept(false);
+
+          // 待機チャンネルをクリーンアップ
+          // RealtimeBattleScreenが同名チャンネルを引き継ぐため、
+          // ここではリスナーだけ解除し、チャンネル自体はRealtimeBattleScreenに任せる
+          // → removeChannelしない
+          waitChannelRef.current = null;
+
+          setMode('realtime-battle');
+        }
+      })
+      .subscribe();
     waitChannelRef.current = channel;
   };
 
@@ -239,22 +250,10 @@ function BattlePageContent() {
     setIsHost(false);
     setOpponentUserId(session.host_id);
 
-    // ゲスト参加を通知（ホストのバトルチャンネルへ）
+    // guest_joinedはRealtimeBattleScreenのチャンネル接続時に送信される
+    // （チャンネル競合を防ぐため、ここでは一時チャンネルを作成しない）
     const snapshot = createSnapshot(character, species);
-    const channel = supabase.channel(`battle:${sessionId}`, {
-      config: { broadcast: { self: true } },
-    });
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        channel.send({
-          type: 'broadcast',
-          event: 'battle_event',
-          payload: { type: 'guest_joined', guestSnapshot: snapshot },
-        });
-        // すぐには閉じない、RealtimeBattleScreen が別途チャンネルを開く
-        setTimeout(() => supabase.removeChannel(channel), 2000);
-      }
-    });
+    setMySnapshot(snapshot);
 
     setMode('realtime-battle');
   };
@@ -327,6 +326,7 @@ function BattlePageContent() {
           myUserId={myUserId}
           opponentUserId={opponentUserId}
           onEnd={handleBattleEnd}
+          guestSnapshot={!isHost ? mySnapshot ?? undefined : undefined}
         />
       </AnimatePresence>
     );

@@ -12,8 +12,9 @@ import {
 } from '@/lib/battle-logic';
 import {
   type BattleEvent, type TurnResult,
-  subscribeToBattle, broadcastBattleEvent, finishBattleSession,
+  broadcastBattleEvent, finishBattleSession,
 } from '@/lib/realtime-battle-logic';
+import type { ChallengerSnapshot } from '@/lib/challenge-logic';
 import { GameInstructionPopup } from './GameInstructionPopup';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -25,6 +26,8 @@ interface RealtimeBattleScreenProps {
   myUserId: string;
   opponentUserId: string;
   onEnd: (won: boolean) => void;
+  /** ゲスト側のみ: チャンネル接続後にguest_joinedを送信するためのスナップショット */
+  guestSnapshot?: ChallengerSnapshot;
 }
 
 type BattlePhase = 'select' | 'waiting' | 'animating' | 'result';
@@ -36,7 +39,7 @@ interface LogEntry {
 
 export function RealtimeBattleScreen({
   sessionId, isHost, player: initialPlayer, opponent: initialOpponent,
-  myUserId, opponentUserId, onEnd,
+  myUserId, opponentUserId, onEnd, guestSnapshot,
 }: RealtimeBattleScreenProps) {
   const [showInstructions, setShowInstructions] = useState(true);
   const [player, setPlayer] = useState<Battler>({ ...initialPlayer });
@@ -194,38 +197,55 @@ export function RealtimeBattleScreen({
 
   // Realtimeイベント処理
   useEffect(() => {
-    const channel = subscribeToBattle(sessionId, (event: BattleEvent) => {
-      if (event.type === 'move_select') {
-        if (event.playerId !== myUserId) {
-          // 相手の技選択を受信
-          if (isHost) {
-            // ホスト: 相手の技を受け取り、自分のが既に選んであれば計算
-            opponentMoveIdRef.current = event.moveId;
-            if (myMoveRef.current) {
-              executeTurnAsHost(myMoveRef.current, event.moveId);
-            }
-          }
-          // ゲストは turn_result を待つだけ
-        }
-      } else if (event.type === 'turn_result') {
-        if (!isHost) {
-          // ゲスト: ホストからの結果を適用
-          applyTurnResult(event.result);
-        }
-      } else if (event.type === 'battle_cancel') {
-        addLog([{ text: '相手がバトルをキャンセルしました。' }]);
-        setWinner('player');
-        setPhase('result');
-      }
+    const supabase = createClient();
+    // 専用チャンネル名でバトル通信（battle pageの一時チャンネルと競合しない）
+    const channel = supabase.channel(`battle-game:${sessionId}`, {
+      config: { broadcast: { self: true } },
     });
+
+    channel
+      .on('broadcast', { event: 'battle_event' }, ({ payload }) => {
+        const event = payload as BattleEvent;
+        if (event.type === 'move_select') {
+          if (event.playerId !== myUserId) {
+            // 相手の技選択を受信
+            if (isHost) {
+              // ホスト: 相手の技を受け取り、自分のが既に選んであれば計算
+              opponentMoveIdRef.current = event.moveId;
+              if (myMoveRef.current) {
+                executeTurnAsHost(myMoveRef.current, event.moveId);
+              }
+            }
+            // ゲストは turn_result を待つだけ
+          }
+        } else if (event.type === 'turn_result') {
+          if (!isHost) {
+            // ゲスト: ホストからの結果を適用
+            applyTurnResult(event.result);
+          }
+        } else if (event.type === 'battle_cancel') {
+          addLog([{ text: '相手がバトルをキャンセルしました。' }]);
+          setWinner('player');
+          setPhase('result');
+        }
+      })
+      .subscribe((status) => {
+        // ゲスト側: チャンネル接続後にguest_joinedを通知
+        if (status === 'SUBSCRIBED' && !isHost && guestSnapshot) {
+          broadcastBattleEvent(channel, {
+            type: 'guest_joined',
+            guestSnapshot,
+          });
+        }
+      });
 
     channelRef.current = channel;
 
     return () => {
-      const supabase = createClient();
       supabase.removeChannel(channel);
     };
-  }, [sessionId, myUserId, isHost, executeTurnAsHost, applyTurnResult, addLog]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, myUserId, isHost]);
 
   // プレイヤーの技選択
   const handleMoveSelect = (move: BattleMove) => {

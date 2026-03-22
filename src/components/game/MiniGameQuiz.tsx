@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { GameInstructionPopup } from './GameInstructionPopup';
 
 interface MiniGameQuizProps {
   onClose: () => void;
@@ -91,6 +92,7 @@ const QUIZ_POOL: QuizQuestion[] = [
 ];
 
 export function MiniGameQuiz({ onClose, onComplete }: MiniGameQuizProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -141,6 +143,17 @@ export function MiniGameQuiz({ onClose, onComplete }: MiniGameQuizProps) {
       exit={{ opacity: 0, scale: 0.9 }}
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="クイズ"
+        emoji="❓"
+        instructions={[
+          'ランダムに5問出題されるよ',
+          '4つの選択肢から正解を選ぼう',
+          '4問以上正解で最高得点！',
+        ]}
+        onStart={() => setShowInstructions(false)}
+      />
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
         <h3 className="text-lg font-bold text-center text-purple-600 mb-2">
           クイズ

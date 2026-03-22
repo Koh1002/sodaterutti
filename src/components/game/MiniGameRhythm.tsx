@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { GameInstructionPopup } from './GameInstructionPopup';
 
 interface MiniGameRhythmProps {
   onClose: () => void;
@@ -23,6 +24,7 @@ const GAME_DURATION = 8000; // 8秒
 const NOTE_INTERVAL = GAME_DURATION / TOTAL_NOTES;
 
 export function MiniGameRhythm({ onClose, onComplete }: MiniGameRhythmProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   const [score, setScore] = useState({ perfect: 0, good: 0, miss: 0 });
@@ -123,6 +125,18 @@ export function MiniGameRhythm({ onClose, onComplete }: MiniGameRhythmProps) {
       exit={{ opacity: 0, scale: 0.9 }}
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="リズムゲーム"
+        emoji="🎵"
+        instructions={[
+          'マークが光ったらタップ！',
+          'タイミングよく押してPERFECTを狙おう',
+          '10個のノートが流れてくるよ',
+          'PERFECTが多いほど高得点！',
+        ]}
+        onStart={() => setShowInstructions(false)}
+      />
       <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
         <h3 className="text-lg font-bold text-center text-purple-600 mb-3">
           リズムゲーム

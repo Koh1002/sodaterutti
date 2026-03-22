@@ -8,6 +8,7 @@ import { MiniGameMemory } from './MiniGameMemory';
 import { MiniGameRhythm } from './MiniGameRhythm';
 import { MiniGameQuiz } from './MiniGameQuiz';
 import { MiniGameWhack } from './MiniGameWhack';
+import { GameInstructionPopup } from './GameInstructionPopup';
 import { CompactStatus } from './StatusBar';
 
 interface ActionButtonsProps {
@@ -378,6 +379,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
 type Hand = 'rock' | 'scissors' | 'paper';
 
 function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComplete: (score: number) => void }) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [round, setRound] = useState(0);
   const [wins, setWins] = useState(0);
   const [playerHand, setPlayerHand] = useState<Hand | null>(null);
@@ -437,6 +439,17 @@ function MiniGameJanken({ onClose, onComplete }: { onClose: () => void; onComple
       className="fixed inset-0 bg-black/15 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && gameOver && onClose()}
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="じゃんけんゲーム"
+        emoji="✊"
+        instructions={[
+          'グー・チョキ・パーから選ぼう',
+          '全3ラウンド勝負！',
+          '勝ち数が多いほど高得点！',
+        ]}
+        onStart={() => setShowInstructions(false)}
+      />
       <motion.div
         initial={{ y: 20 }}
         animate={{ y: 0 }}

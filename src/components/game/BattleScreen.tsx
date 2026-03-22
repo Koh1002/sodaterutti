@@ -9,6 +9,7 @@ import {
   calculateMoveDamage, doesMoveHit, doesEffectProc,
   processStatusEffect, cpuSelectMove, statusLabel, statusEmoji,
 } from '@/lib/battle-logic';
+import { GameInstructionPopup } from './GameInstructionPopup';
 
 interface BattleScreenProps {
   player: Battler;
@@ -24,6 +25,7 @@ interface LogEntry {
 }
 
 export function BattleScreen({ player: initialPlayer, opponent: initialOpponent, onEnd }: BattleScreenProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [player, setPlayer] = useState<Battler>({ ...initialPlayer });
   const [opponent, setOpponent] = useState<Battler>({ ...initialOpponent });
   const [phase, setPhase] = useState<BattlePhase>('select');
@@ -154,6 +156,18 @@ export function BattleScreen({ player: initialPlayer, opponent: initialOpponent,
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-gradient-to-b from-sky-200 to-green-100 flex flex-col"
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="CPU バトル"
+        emoji="⚔️"
+        instructions={[
+          '4つの技から1つ選んで攻撃しよう',
+          '攻撃技でダメージを与えよう',
+          '状態異常技で相手を弱体化できるよ',
+          '相手のHPを0にしたら勝利！',
+        ]}
+        onStart={() => setShowInstructions(false)}
+      />
       {/* ターン表示 */}
       <div className="text-center py-2 bg-black/20">
         <span className="text-white font-bold text-sm">Turn {turn}</span>

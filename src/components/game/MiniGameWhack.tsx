@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { GameInstructionPopup } from './GameInstructionPopup';
 
 interface MiniGameWhackProps {
   onClose: () => void;
@@ -20,6 +21,8 @@ interface Mole {
 }
 
 export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [gameActive, setGameActive] = useState(false);
   const [score, setScore] = useState(0);
   const [misses, setMisses] = useState(0);
   const [moles, setMoles] = useState<Mole[]>([]);
@@ -29,9 +32,14 @@ export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
   const nextId = useRef(0);
   const completed = useRef(false);
 
+  const handleStartGame = () => {
+    setShowInstructions(false);
+    setGameActive(true);
+  };
+
   // タイマー
   useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || !gameActive) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         const next = prev - 100;
@@ -43,7 +51,7 @@ export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [gameOver]);
+  }, [gameOver, gameActive]);
 
   // ゲーム終了時にスコア送信
   useEffect(() => {
@@ -55,7 +63,7 @@ export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
 
   // もぐら出現
   useEffect(() => {
-    if (gameOver) return;
+    if (gameOver || !gameActive) return;
     const interval = setInterval(() => {
       const hole = Math.floor(Math.random() * 9);
       const isGood = Math.random() > 0.25; // 75%は良いもぐら
@@ -74,7 +82,7 @@ export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
       }, MOLE_VISIBLE_TIME);
     }, SPAWN_INTERVAL);
     return () => clearInterval(interval);
-  }, [gameOver]);
+  }, [gameOver, gameActive]);
 
   const handleTap = useCallback((mole: Mole) => {
     if (gameOver) return;
@@ -107,6 +115,18 @@ export function MiniGameWhack({ onClose, onComplete }: MiniGameWhackProps) {
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && gameOver && onClose()}
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="もぐらたたき"
+        emoji="🐹"
+        instructions={[
+          '穴から出てくるもぐらをタップしよう',
+          '🐹をタップするとスコアアップ！',
+          '💣は避けてね（スコアが減るよ）',
+          '15秒間でたくさんゲットしよう！',
+        ]}
+        onStart={handleStartGame}
+      />
       <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl">
         <h3 className="text-xl font-bold text-center text-amber-600 mb-2">
           もぐらたたき

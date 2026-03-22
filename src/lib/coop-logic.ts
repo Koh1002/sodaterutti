@@ -3,8 +3,9 @@
  *
  * ゲーム内容:
  * - 2人で協力して制限時間内にターゲットスコアに到達する
- * - 各プレイヤーがタップするたびスコアが加算される
- * - Realtime Broadcast でスコアを即時同期
+ * - 交互にタップする番が切り替わる（ランダムスパン）
+ * - 自分の番でないときにタップしてもカウントされない
+ * - Realtime Broadcast でスコア・ターン切り替えを即時同期
  */
 
 import { createClient } from '@/lib/supabase/client';
@@ -23,11 +24,22 @@ export interface CoopGameState {
 
 export type CoopEvent =
   | { type: 'tap'; playerId: string; score: number }
+  | { type: 'ready'; playerId: string }
   | { type: 'start' }
+  | { type: 'turn_switch'; activeRole: 'host' | 'guest'; nextSwitchIn: number }
   | { type: 'finish'; hostScore: number; guestScore: number };
 
 const GAME_DURATION = 20; // 秒
 const TAP_SCORE = 1;
+
+/** ターン切り替えの最小/最大スパン（ミリ秒） */
+const MIN_TURN_DURATION = 1500;  // 1.5秒 - すぐ切り替わる
+const MAX_TURN_DURATION = 5000;  // 5秒 - なかなか切り替わらない
+
+/** ランダムなターン持続時間を生成 */
+export function getRandomTurnDuration(): number {
+  return MIN_TURN_DURATION + Math.random() * (MAX_TURN_DURATION - MIN_TURN_DURATION);
+}
 
 /** 6桁のルームコードを生成 */
 function generateRoomCode(): string {

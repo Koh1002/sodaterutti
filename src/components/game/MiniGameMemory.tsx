@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { GameInstructionPopup } from './GameInstructionPopup';
 
 interface MiniGameMemoryProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ interface Card {
 }
 
 export function MiniGameMemory({ onClose, onComplete }: MiniGameMemoryProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [cards, setCards] = useState<Card[]>([]);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
   const [matches, setMatches] = useState(0);
@@ -34,8 +36,12 @@ export function MiniGameMemory({ onClose, onComplete }: MiniGameMemoryProps) {
       .map((emoji, i) => ({ id: i, emoji, isFlipped: false, isMatched: false }))
       .sort(() => Math.random() - 0.5);
     setCards(shuffled);
-    setStartTime(Date.now());
   }, []);
+
+  const handleStartGame = () => {
+    setShowInstructions(false);
+    setStartTime(Date.now());
+  };
 
   // タイマー
   useEffect(() => {
@@ -109,6 +115,18 @@ export function MiniGameMemory({ onClose, onComplete }: MiniGameMemoryProps) {
       exit={{ opacity: 0, scale: 0.9 }}
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="神経衰弱"
+        emoji="🃏"
+        instructions={[
+          'カードをタップしてめくろう',
+          '同じ絵柄のペアを見つけよう',
+          '8ペア全部揃えたらクリア！',
+          '30秒以内なら最高得点！',
+        ]}
+        onStart={handleStartGame}
+      />
       <div className="bg-white rounded-2xl p-4 w-full max-w-sm shadow-xl">
         <h3 className="text-lg font-bold text-center text-purple-600 mb-2">
           神経衰弱

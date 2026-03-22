@@ -14,6 +14,7 @@ import {
   type BattleEvent, type TurnResult,
   subscribeToBattle, broadcastBattleEvent, finishBattleSession,
 } from '@/lib/realtime-battle-logic';
+import { GameInstructionPopup } from './GameInstructionPopup';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface RealtimeBattleScreenProps {
@@ -37,6 +38,7 @@ export function RealtimeBattleScreen({
   sessionId, isHost, player: initialPlayer, opponent: initialOpponent,
   myUserId, opponentUserId, onEnd,
 }: RealtimeBattleScreenProps) {
+  const [showInstructions, setShowInstructions] = useState(true);
   const [player, setPlayer] = useState<Battler>({ ...initialPlayer });
   const [opponent, setOpponent] = useState<Battler>({ ...initialOpponent });
   const [phase, setPhase] = useState<BattlePhase>('select');
@@ -257,6 +259,18 @@ export function RealtimeBattleScreen({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-gradient-to-b from-sky-200 to-green-100 flex flex-col"
     >
+      <GameInstructionPopup
+        isOpen={showInstructions}
+        title="フレンドバトル"
+        emoji="⚔️"
+        instructions={[
+          '4つの技から1つ選んで攻撃しよう',
+          '相手も同時に技を選んでいるよ',
+          '攻撃技でダメージ、状態技で弱体化！',
+          '相手のHPを0にしたら勝利！',
+        ]}
+        onStart={() => setShowInstructions(false)}
+      />
       {/* ヘッダー */}
       <div className="text-center py-2 bg-black/20">
         <span className="text-white font-bold text-sm">Turn {turn}</span>

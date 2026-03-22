@@ -4,9 +4,11 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { GameInstructionPopup } from './GameInstructionPopup';
 import {
   createCoopRoom, joinCoopRoom,
   subscribeToRoom, broadcastEvent, updateRoomStatus,
+  getRandomTurnDuration,
   GAME_DURATION, TAP_SCORE,
   type CoopEvent,
 } from '@/lib/coop-logic';
@@ -15,7 +17,7 @@ interface CoopGameScreenProps {
   onClose: () => void;
 }
 
-type Phase = 'menu' | 'waiting' | 'playing' | 'result';
+type Phase = 'menu' | 'waiting' | 'ready' | 'playing' | 'result';
 
 export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   const [phase, setPhase] = useState<Phase>('menu');
@@ -31,9 +33,26 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   const [userId, setUserId] = useState('');
   const [tapEffects, setTapEffects] = useState<{ id: number; x: number; y: number }[]>([]);
 
+  // ターン制関連
+  const [activeRole, setActiveRole] = useState<'host' | 'guest'>('host');
+  const [turnFlash, setTurnFlash] = useState(false); // ターン切り替え演出
+
+  // Ready-sync関連
+  const [myReady, setMyReady] = useState(false);
+  const [partnerReady, setPartnerReady] = useState(false);
+
   const channelRef = useRef<RealtimeChannel | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const turnTimerRef = useRef<NodeJS.Timeout | null>(null);
   const effectIdRef = useRef(0);
+  const myScoreRef = useRef(0);
+  const partnerScoreRef = useRef(0);
+  const phaseRef = useRef(phase);
+
+  phaseRef.current = phase;
+
+  // 自分の番かどうか
+  const isMyTurn = (isHost && activeRole === 'host') || (!isHost && activeRole === 'guest');
 
   // ユーザーID取得
   useEffect(() => {
@@ -51,7 +70,42 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
         supabase.removeChannel(channelRef.current);
       }
       if (timerRef.current) clearInterval(timerRef.current);
+      if (turnTimerRef.current) clearTimeout(turnTimerRef.current);
     };
+  }, []);
+
+  // ホスト: ターン切り替えスケジューリング
+  const scheduleTurnSwitch = useCallback(() => {
+    if (turnTimerRef.current) clearTimeout(turnTimerRef.current);
+
+    const duration = getRandomTurnDuration();
+    turnTimerRef.current = setTimeout(() => {
+      if (phaseRef.current !== 'playing') return;
+
+      // 現在のactiveRoleを切り替え
+      setActiveRole(prev => {
+        const next = prev === 'host' ? 'guest' : 'host';
+        const nextDuration = getRandomTurnDuration();
+
+        // ブロードキャスト
+        if (channelRef.current) {
+          broadcastEvent(channelRef.current, {
+            type: 'turn_switch',
+            activeRole: next,
+            nextSwitchIn: nextDuration,
+          });
+        }
+
+        return next;
+      });
+
+      // ターン切り替え演出
+      setTurnFlash(true);
+      setTimeout(() => setTurnFlash(false), 500);
+
+      // 次のターン切り替えをスケジュール
+      scheduleTurnSwitch();
+    }, duration);
   }, []);
 
   const startTimer = useCallback(() => {
@@ -62,6 +116,7 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
       setTimeLeft(remaining);
       if (remaining <= 0) {
         if (timerRef.current) clearInterval(timerRef.current);
+        if (turnTimerRef.current) clearTimeout(turnTimerRef.current);
         setPhase('result');
       }
     }, 1000);
@@ -70,17 +125,30 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   const handleEvent = useCallback((event: CoopEvent) => {
     if (event.type === 'tap') {
       if (event.playerId !== userId) {
+        partnerScoreRef.current = event.score;
         setPartnerScore(event.score);
+      }
+    } else if (event.type === 'ready') {
+      if (event.playerId !== userId) {
+        setPartnerReady(true);
       }
     } else if (event.type === 'start') {
       setPhase('playing');
       setTimeLeft(GAME_DURATION);
       setMyScore(0);
       setPartnerScore(0);
+      myScoreRef.current = 0;
+      partnerScoreRef.current = 0;
+      setActiveRole('host'); // ホストから開始
       startTimer();
+    } else if (event.type === 'turn_switch') {
+      setActiveRole(event.activeRole);
+      setTurnFlash(true);
+      setTimeout(() => setTurnFlash(false), 500);
     } else if (event.type === 'finish') {
       setPhase('result');
       if (timerRef.current) clearInterval(timerRef.current);
+      if (turnTimerRef.current) clearTimeout(turnTimerRef.current);
       if (isHost) {
         setMyScore(event.hostScore);
         setPartnerScore(event.guestScore);
@@ -110,9 +178,8 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
       const { data } = await supabase.from('coop_rooms').select('guest_id').eq('id', result.roomId).single();
       if (data?.guest_id) {
         clearInterval(pollInterval);
-        // ゲスト参加 → ゲーム開始
-        await updateRoomStatus(result.roomId, 'playing');
-        broadcastEvent(channel, { type: 'start' });
+        // ゲスト参加 → Ready画面へ
+        setPhase('ready');
       }
     }, 2000);
 
@@ -131,18 +198,49 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
     setRoomId(result.roomId);
     setRoomCode(code);
     setIsHost(false);
-    setPhase('waiting');
+    setPhase('ready');
 
     // Realtimeに接続
     const channel = subscribeToRoom(result.roomId, handleEvent);
     channelRef.current = channel;
   };
 
+  // Ready処理
+  const handleReady = () => {
+    setMyReady(true);
+    if (channelRef.current) {
+      broadcastEvent(channelRef.current, { type: 'ready', playerId: userId });
+    }
+  };
+
+  // 両方Readyになったらホストがゲーム開始
+  useEffect(() => {
+    if (phase === 'ready' && myReady && partnerReady && isHost) {
+      updateRoomStatus(roomId, 'playing');
+      if (channelRef.current) {
+        broadcastEvent(channelRef.current, { type: 'start' });
+      }
+      // ホスト: ターン切り替えスケジュール開始
+      scheduleTurnSwitch();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myReady, partnerReady, phase, isHost]);
+
+  // ホスト: playing開始時にターンスケジュール
+  useEffect(() => {
+    if (phase === 'playing' && isHost) {
+      scheduleTurnSwitch();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, isHost]);
+
   // タップ処理
   const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
     if (phase !== 'playing') return;
+    if (!isMyTurn) return; // 自分の番でない場合は無効
 
-    const newScore = myScore + TAP_SCORE;
+    const newScore = myScoreRef.current + TAP_SCORE;
+    myScoreRef.current = newScore;
     setMyScore(newScore);
 
     // タップエフェクト
@@ -172,8 +270,8 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   // ゲーム終了処理
   useEffect(() => {
     if (phase === 'result' && channelRef.current && isHost) {
-      const hostFinal = isHost ? myScore : partnerScore;
-      const guestFinal = isHost ? partnerScore : myScore;
+      const hostFinal = isHost ? myScoreRef.current : partnerScoreRef.current;
+      const guestFinal = isHost ? partnerScoreRef.current : myScoreRef.current;
       broadcastEvent(channelRef.current, {
         type: 'finish',
         hostScore: hostFinal,
@@ -210,7 +308,7 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
               <p className="text-6xl mb-3">🧹</p>
               <h2 className="text-xl font-bold text-gray-800">おそうじリレー</h2>
               <p className="text-sm text-gray-500 mt-1">
-                2人で協力してタップ！{GAME_DURATION}秒以内に{targetScore}回お掃除しよう！
+                2人で交互にタップ！{GAME_DURATION}秒以内に{targetScore}回お掃除しよう！
               </p>
             </div>
 
@@ -245,24 +343,36 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
           </div>
         )}
 
-        {/* 待機中 */}
+        {/* 待機中（ホストがゲスト参加待ち） */}
         {phase === 'waiting' && (
           <div className="text-center space-y-6">
             <div className="animate-bounce text-6xl">🧹</div>
-            {isHost ? (
-              <>
-                <div>
-                  <p className="text-gray-600 font-bold mb-2">ルームコードを友達に教えよう！</p>
-                  <p className="text-4xl font-bold text-blue-600 tracking-widest bg-white/80 rounded-xl py-4 px-8">
-                    {roomCode}
-                  </p>
-                </div>
-                <p className="text-gray-400 text-sm animate-pulse">相手の参加を待っています...</p>
-              </>
-            ) : (
-              <p className="text-gray-400 text-sm animate-pulse">ゲーム開始を待っています...</p>
-            )}
+            <div>
+              <p className="text-gray-600 font-bold mb-2">ルームコードを友達に教えよう！</p>
+              <p className="text-4xl font-bold text-blue-600 tracking-widest bg-white/80 rounded-xl py-4 px-8">
+                {roomCode}
+              </p>
+            </div>
+            <p className="text-gray-400 text-sm animate-pulse">相手の参加を待っています...</p>
           </div>
+        )}
+
+        {/* Ready画面 (遊び方ポップアップ + Ready同期) */}
+        {phase === 'ready' && (
+          <GameInstructionPopup
+            isOpen={true}
+            title="おそうじリレー"
+            emoji="🧹"
+            instructions={[
+              '2人で協力してお掃除しよう！',
+              '自分の番のときだけタップが有効だよ',
+              '番はランダムに切り替わるから注意！',
+              '画面が光ったら番が交代の合図',
+              `${GAME_DURATION}秒で合計${targetScore}回を目指そう！`,
+            ]}
+            onStart={handleReady}
+            waitingForOthers={myReady && !partnerReady}
+          />
         )}
 
         {/* プレイ中 */}
@@ -272,6 +382,24 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
             <div className={`text-5xl font-bold ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : 'text-gray-800'}`}>
               {timeLeft}
             </div>
+
+            {/* ターン表示 */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isMyTurn ? 'my' : 'partner'}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className={`px-6 py-2 rounded-full font-bold text-sm ${
+                  isMyTurn
+                    ? 'bg-green-400 text-white shadow-lg shadow-green-200'
+                    : 'bg-gray-300 text-gray-600'
+                }`}
+              >
+                {isMyTurn ? '🧹 あなたの番！タップ！' : '⏳ パートナーの番...待って！'}
+              </motion.div>
+            </AnimatePresence>
 
             {/* 進捗バー */}
             <div className="w-full bg-white/50 rounded-full h-6 overflow-hidden border-2 border-white">
@@ -287,11 +415,11 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
 
             {/* スコア表示 */}
             <div className="flex gap-8 mb-2">
-              <div className="text-center">
+              <div className={`text-center px-4 py-2 rounded-xl transition-all ${isMyTurn ? 'bg-green-100 ring-2 ring-green-400' : ''}`}>
                 <p className="text-xs text-gray-500">あなた</p>
                 <p className="text-2xl font-bold text-blue-600">{myScore}</p>
               </div>
-              <div className="text-center">
+              <div className={`text-center px-4 py-2 rounded-xl transition-all ${!isMyTurn ? 'bg-green-100 ring-2 ring-green-400' : ''}`}>
                 <p className="text-xs text-gray-500">パートナー</p>
                 <p className="text-2xl font-bold text-purple-600">{partnerScore}</p>
               </div>
@@ -301,11 +429,17 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
             <div
               onClick={handleTap}
               onTouchStart={handleTap}
-              className="relative w-full aspect-square max-w-xs bg-white/60 rounded-3xl border-4 border-dashed border-cyan-300 flex items-center justify-center cursor-pointer active:scale-95 transition select-none overflow-hidden"
+              className={`relative w-full aspect-square max-w-xs rounded-3xl border-4 border-dashed flex items-center justify-center cursor-pointer transition select-none overflow-hidden ${
+                isMyTurn
+                  ? 'bg-white/60 border-green-400 active:scale-95'
+                  : 'bg-gray-200/60 border-gray-300 opacity-60 cursor-not-allowed'
+              }`}
             >
               <div className="text-center">
-                <p className="text-7xl">🧹</p>
-                <p className="text-gray-400 text-sm mt-2 font-bold">タップでお掃除！</p>
+                <p className="text-7xl">{isMyTurn ? '🧹' : '🚫'}</p>
+                <p className={`text-sm mt-2 font-bold ${isMyTurn ? 'text-green-600' : 'text-gray-400'}`}>
+                  {isMyTurn ? 'タップでお掃除！' : 'パートナーの番です'}
+                </p>
               </div>
               {/* タップエフェクト */}
               <AnimatePresence>
@@ -324,6 +458,19 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
                 ))}
               </AnimatePresence>
             </div>
+
+            {/* ターン切り替え演出（画面全体フラッシュ） */}
+            <AnimatePresence>
+              {turnFlash && (
+                <motion.div
+                  initial={{ opacity: 0.6 }}
+                  animate={{ opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="fixed inset-0 bg-yellow-300 pointer-events-none z-40"
+                />
+              )}
+            </AnimatePresence>
           </div>
         )}
 

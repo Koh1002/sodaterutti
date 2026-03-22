@@ -175,11 +175,18 @@ export function CharacterDisplay({ character, species, onTap }: CharacterDisplay
             {Array.from({ length: Math.min(character.poop_count, 3) }).map((_, i) => (
               <motion.div
                 key={i}
-                className="w-3.5 h-3.5 rounded-full bg-base-300/60"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: i * 0.15, type: 'spring' }}
-              />
+              >
+                <Image
+                  src="/images/icon_poop.png"
+                  alt="うんち"
+                  width={24}
+                  height={24}
+                  className="drop-shadow-sm"
+                />
+              </motion.div>
             ))}
           </div>
         )}

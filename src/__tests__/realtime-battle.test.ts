@@ -62,6 +62,7 @@ class MockChannel {
 
 function createMockSupabase() {
   return {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     channel(name: string, _config?: unknown) {
       // シングルトン挙動: 同名チャンネルは同じインスタンスを返す
       if (channelRegistry.has(name)) {
@@ -151,7 +152,7 @@ describe('ゲスト側のチャンネル競合修正', () => {
     expect(battleChannel.removed).toBe(true); // 同じインスタンスなので true
 
     // 新しいイベントを受信しようとしても無視される
-    let received = false;
+    const received = false;
     battleChannel.simulateReceive('battle_event', { type: 'move_select', playerId: 'p2', moveId: 1 });
     // listener が呼ばれない（removed=true）
     expect(received).toBe(false);
@@ -259,7 +260,7 @@ describe('ゲストの guest_joined 送信タイミング', () => {
 
   it('ゲストはチャンネル SUBSCRIBED 後に guest_joined を送信すること', async () => {
     const channel = mockSupabase.channel(`battle-game:${sessionId}`) as MockChannel;
-    let sentEvents: unknown[] = [];
+    const sentEvents: unknown[] = [];
 
     // send をスパイ
     const originalSend = channel.send.bind(channel);
@@ -299,7 +300,7 @@ describe('move_select イベントのフィルタリング', () => {
     const sessionId = 'filter-test';
 
     const channel = mockSupabase.channel(`battle-game:${sessionId}`) as MockChannel;
-    let processedMoves: number[] = [];
+    const processedMoves: number[] = [];
 
     channel.on('broadcast', { event: 'battle_event' }, ({ payload }) => {
       const event = payload as { type: string; playerId: string; moveId: number };

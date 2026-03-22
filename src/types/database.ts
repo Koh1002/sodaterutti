@@ -478,6 +478,35 @@ export interface Database {
         };
         Relationships: [];
       };
+      battle_sessions: {
+        Row: {
+          id: string;
+          host_id: string;
+          guest_id: string;
+          host_snapshot: Json;
+          guest_snapshot: Json | null;
+          status: 'waiting' | 'playing' | 'finished' | 'cancelled';
+          winner_id: string | null;
+          created_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          host_id: string;
+          guest_id: string;
+          host_snapshot: Json;
+          status?: string;
+        };
+        Update: {
+          guest_snapshot?: Json;
+          status?: string;
+          winner_id?: string | null;
+          started_at?: string;
+          finished_at?: string;
+        };
+        Relationships: [];
+      };
       coop_rooms: {
         Row: {
           id: string;
@@ -546,6 +575,24 @@ export interface Database {
           challenger_snapshot: Json;
           challenge_created_at: string;
         }[];
+      };
+      create_battle_invite: {
+        Args: { opponent_friend_code: string; snapshot: Json };
+        Returns: string;
+      };
+      get_pending_battle_invites: {
+        Args: Record<string, never>;
+        Returns: {
+          session_id: string;
+          host_user_id: string;
+          host_name: string;
+          host_snapshot: Json;
+          session_created_at: string;
+        }[];
+      };
+      accept_battle_invite: {
+        Args: { p_session_id: string; snapshot: Json };
+        Returns: boolean;
       };
       join_coop_room: {
         Args: { code: string };

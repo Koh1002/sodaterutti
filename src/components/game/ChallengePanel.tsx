@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   sendChallenge, getPendingChallenges, declineChallenge,
-  acceptAndResolveBattle, createSnapshot,
+  createSnapshot,
   type PendingChallenge,
 } from '@/lib/challenge-logic';
+import { createBattler, type Battler } from '@/lib/battle-logic';
 import { useGameStore } from '@/stores/game-store';
 
 interface ChallengePanelProps {
   onClose: () => void;
   myCode: string;
+  onStartBattle?: (player: Battler, opponent: Battler) => void;
 }
 
-export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
+export function ChallengePanel({ onClose, myCode, onStartBattle }: ChallengePanelProps) {
   const { character, species } = useGameStore();
   const [tab, setTab] = useState<'send' | 'inbox'>('inbox');
   const [friendCode, setFriendCode] = useState('');
@@ -22,8 +24,6 @@ export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
   const [sending, setSending] = useState(false);
   const [challenges, setChallenges] = useState<PendingChallenge[]>([]);
   const [loadingChallenges, setLoadingChallenges] = useState(true);
-  const [battleResult, setBattleResult] = useState<{ won: boolean; log: string[] } | null>(null);
-  const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
     loadChallenges();
@@ -52,59 +52,41 @@ export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
   };
 
   const handleAccept = async (challenge: PendingChallenge) => {
-    if (!character || !species || resolving) return;
-    setResolving(true);
+    if (!character || !species || !onStartBattle) return;
+
     const mySnapshot = createSnapshot(character, species);
-    const result = await acceptAndResolveBattle(challenge.id, mySnapshot);
-    setBattleResult(result);
-    setResolving(false);
+    const challSnap = challenge.snapshot;
+
+    // 自分のバトラー
+    const playerBattler = createBattler(
+      mySnapshot.name, mySnapshot.speciesName, mySnapshot.imageKey,
+      mySnapshot.strength, mySnapshot.hungerPercent, mySnapshot.happinessPercent,
+    );
+    // 相手のバトラー（CPUが操作）
+    const opponentBattler = createBattler(
+      challSnap.name, challSnap.speciesName, challSnap.imageKey,
+      challSnap.strength, challSnap.hungerPercent, challSnap.happinessPercent,
+    );
+
+    // チャレンジのステータスを更新（accepted）
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    await supabase.from('battle_challenges').update({
+      status: 'accepted',
+      opponent_snapshot: mySnapshot as unknown as import('@/types/database').Json,
+    }).eq('id', challenge.id);
+
     // リストから削除
     setChallenges(prev => prev.filter(c => c.id !== challenge.id));
+
+    // バトル画面を起動（CPUが相手キャラを操作）
+    onStartBattle(playerBattler, opponentBattler);
   };
 
   const handleDecline = async (id: string) => {
     await declineChallenge(id);
     setChallenges(prev => prev.filter(c => c.id !== id));
   };
-
-  // バトル結果表示
-  if (battleResult) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
-      >
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col"
-        >
-          <div className={`p-6 text-center ${battleResult.won ? 'bg-gradient-to-r from-yellow-400 to-orange-400' : 'bg-gradient-to-r from-gray-400 to-gray-500'}`}>
-            <p className="text-4xl mb-2">{battleResult.won ? '🎉' : '😢'}</p>
-            <p className="text-2xl font-bold text-white">
-              {battleResult.won ? '勝利！' : '敗北...'}
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-1">
-            <p className="text-sm font-bold text-gray-600 mb-2">バトルログ</p>
-            {battleResult.log.map((line, i) => (
-              <p key={i} className="text-xs text-gray-600 leading-relaxed">{line}</p>
-            ))}
-          </div>
-          <div className="p-4 border-t">
-            <button
-              onClick={() => { setBattleResult(null); onClose(); }}
-              className="w-full py-3 bg-purple-500 text-white font-bold rounded-xl"
-            >
-              閉じる
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -144,13 +126,11 @@ export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
         <div className="flex-1 overflow-y-auto p-4">
           {tab === 'send' && (
             <div className="space-y-4">
-              {/* 自分のコード */}
               <div className="bg-indigo-50 rounded-xl p-3 text-center">
                 <p className="text-xs text-gray-500 mb-1">あなたのフレンドコード</p>
                 <p className="text-xl font-bold text-indigo-600 tracking-widest">{myCode}</p>
               </div>
 
-              {/* 送信フォーム */}
               <div>
                 <p className="text-sm font-bold text-gray-600 mb-2">チャレンジを送る</p>
                 <div className="flex gap-2">
@@ -178,7 +158,7 @@ export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
               </div>
 
               <p className="text-xs text-gray-400 text-center">
-                チャレンジを送ると、相手が好きなタイミングで受けて戦えます。結果は自動シミュレーションで決まります。
+                チャレンジを送ると、相手が好きなタイミングで受けて戦えます。相手のキャラをCPUが操作してバトルします！
               </p>
             </div>
           )}
@@ -216,10 +196,9 @@ export function ChallengePanel({ onClose, myCode }: ChallengePanelProps) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAccept(c)}
-                          disabled={resolving}
-                          className="flex-1 py-2.5 bg-red-500 text-white font-bold rounded-xl text-sm hover:bg-red-600 transition disabled:opacity-50"
+                          className="flex-1 py-2.5 bg-red-500 text-white font-bold rounded-xl text-sm hover:bg-red-600 transition"
                         >
-                          {resolving ? '対戦中...' : '受けて立つ！'}
+                          受けて立つ！
                         </button>
                         <button
                           onClick={() => handleDecline(c.id)}

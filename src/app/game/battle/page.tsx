@@ -1,28 +1,36 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { useGameStore } from '@/stores/game-store';
 import { BattleScreen } from '@/components/game/BattleScreen';
+import { RealtimeBattleScreen } from '@/components/game/RealtimeBattleScreen';
 import { ChallengePanel } from '@/components/game/ChallengePanel';
 import { CoopGameScreen } from '@/components/game/CoopGameScreen';
 import {
   calculateStrength, createBattler, createCpuBattler,
   type Battler,
 } from '@/lib/battle-logic';
+import { createSnapshot, type ChallengerSnapshot } from '@/lib/challenge-logic';
+import {
+  createBattleInvite, notifyInvite,
+  subscribeToBattle, type BattleEvent,
+} from '@/lib/realtime-battle-logic';
 import { getPendingChallenges } from '@/lib/challenge-logic';
 import { getCharacterImagePath, getPlaceholderSvg } from '@/lib/character-images';
 import type { Database } from '@/types/database';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type Species = Database['public']['Tables']['species']['Row'];
 
 export default function BattlePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { character, species, loadCharacter, setMessage } = useGameStore();
-  const [mode, setMode] = useState<'menu' | 'difficulty' | 'friend-menu' | 'battle' | 'challenge' | 'coop'>('menu');
+  const [mode, setMode] = useState<'menu' | 'difficulty' | 'friend-menu' | 'battle' | 'realtime-battle' | 'challenge' | 'coop'>('menu');
   const [playerBattler, setPlayerBattler] = useState<Battler | null>(null);
   const [opponentBattler, setOpponentBattler] = useState<Battler | null>(null);
   const [allSpecies, setAllSpecies] = useState<Species[]>([]);
@@ -32,7 +40,15 @@ export default function BattlePage() {
   // フレンド対戦用
   const [friendCode, setFriendCode] = useState('');
   const [myCode, setMyCode] = useState('');
+  const [myUserId, setMyUserId] = useState('');
   const [friendSearchResult, setFriendSearchResult] = useState<string | null>(null);
+  const [waitingForAccept, setWaitingForAccept] = useState(false);
+
+  // リアルタイムバトル用
+  const [realtimeSessionId, setRealtimeSessionId] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState(true);
+  const [opponentUserId, setOpponentUserId] = useState('');
+  const waitChannelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -40,14 +56,14 @@ export default function BattlePage() {
       const { data } = await supabase.from('species').select('*');
       if (data) setAllSpecies(data as Species[]);
 
-      // キャラクターがまだストアにない場合はロード
       if (!character) await loadCharacter();
 
-      // 自分のフレンドコード = user_id の先頭8文字
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setMyCode(user.id.slice(0, 8).toUpperCase());
+      if (user) {
+        setMyCode(user.id.slice(0, 8).toUpperCase());
+        setMyUserId(user.id);
+      }
 
-      // 受信チャレンジ数を取得
       const challenges = await getPendingChallenges();
       setChallengeCount(challenges.length);
 
@@ -55,6 +71,16 @@ export default function BattlePage() {
     };
     load();
   }, [character, loadCharacter]);
+
+  // URLパラメータからリアルタイムモードを判定（ゲスト側が通知から遷移）
+  useEffect(() => {
+    if (isLoading || !character || !species) return;
+    const realtimeId = searchParams.get('realtime');
+    const role = searchParams.get('role');
+    if (realtimeId && role === 'guest') {
+      startRealtimeBattleAsGuest(realtimeId);
+    }
+  }, [isLoading, character, species, searchParams]);
 
   if (isLoading) {
     return (
@@ -87,11 +113,8 @@ export default function BattlePage() {
   const startCpuBattle = (difficulty: 'easy' | 'normal' | 'hard') => {
     const player = createBattler(
       character.name || species.name,
-      species.name,
-      species.image_key,
-      strength,
-      character.hunger,
-      character.happiness,
+      species.name, species.image_key,
+      strength, character.hunger, character.happiness,
     );
     const cpu = createCpuBattler(difficulty);
     setPlayerBattler(player);
@@ -99,58 +122,141 @@ export default function BattlePage() {
     setMode('battle');
   };
 
-  const searchFriend = async () => {
+  // ===== リアルタイムフレンド対戦（ホスト側）=====
+  const sendFriendBattleInvite = async () => {
     if (friendCode.length < 4) return;
-    const supabase = createClient();
-    const code = friendCode.toLowerCase().replace(/[^a-f0-9]/g, '');
-    if (code.length < 4) {
-      setFriendSearchResult('4文字以上入力してください');
+    setFriendSearchResult(null);
+
+    const snapshot = createSnapshot(character, species);
+    const result = await createBattleInvite(friendCode, snapshot);
+
+    if ('error' in result) {
+      setFriendSearchResult(result.error);
       return;
     }
-    const { data } = await supabase
-      .rpc('search_user_by_friend_code', { fc: code });
 
-    if (data && data.length > 0) {
-      const friendId = data[0].uid;
-      const { data: friendChar } = await supabase
-        .rpc('get_friend_battle_character', { friend_user_id: friendId });
+    setRealtimeSessionId(result.sessionId);
+    setIsHost(true);
+    setWaitingForAccept(true);
 
-      if (friendChar && friendChar.length > 0) {
-        const fc = friendChar[0];
-        const friendSpecies = allSpecies.find(s => s.id === fc.cspecies_id);
-        if (friendSpecies) {
-          const friendGene = fc.cgene as Record<string, unknown> | null;
-          const friendStrength = calculateStrength({
-            discipline: fc.cdiscipline,
-            care_miss_count: fc.ccare_miss_count,
-            weight: fc.cweight,
-            base_weight: friendSpecies.base_weight,
-            mini_game_total_score: fc.cmini_game_total_score,
-            mini_game_play_count: fc.cmini_game_play_count,
-            battleBonus: typeof friendGene?.battleBonus === 'number' ? friendGene.battleBonus : 0,
-          });
-
-          const player = createBattler(
-            character.name || species.name,
-            species.name, species.image_key,
-            strength, character.hunger, character.happiness,
-          );
-          const opp = createBattler(
-            fc.cname || friendSpecies.name,
-            friendSpecies.name, friendSpecies.image_key,
-            friendStrength, fc.chunger, fc.chappiness,
-          );
-          setPlayerBattler(player);
-          setOpponentBattler(opp);
-          setFriendSearchResult(null);
-          setMode('battle');
-          return;
-        }
-      }
-      setFriendSearchResult('フレンドのキャラクターが見つかりません');
-    } else {
-      setFriendSearchResult('コードが見つかりません');
+    // フレンドのuser_idを取得
+    const supabase = createClient();
+    const code = friendCode.toLowerCase().replace(/[^a-f0-9]/g, '');
+    const { data: friendData } = await supabase.rpc('search_user_by_friend_code', { fc: code });
+    const friendUserId = friendData?.[0]?.uid;
+    if (friendUserId) {
+      setOpponentUserId(friendUserId);
+      // Realtimeで招待通知を送信
+      notifyInvite(friendUserId, {
+        sessionId: result.sessionId,
+        hostId: myUserId,
+        hostName: character.name || species.name,
+        hostSnapshot: snapshot,
+        createdAt: new Date().toISOString(),
+      });
     }
+
+    // バトルチャンネルでゲスト参加を待機
+    const channel = subscribeToBattle(result.sessionId, (event: BattleEvent) => {
+      if (event.type === 'guest_joined') {
+        // ゲストが参加 → バトル開始
+        const guestSnap = event.guestSnapshot;
+        const guestSpecies = allSpecies.find(s => s.name === guestSnap.speciesName);
+
+        const player = createBattler(
+          character.name || species.name,
+          species.name, species.image_key,
+          strength, character.hunger, character.happiness,
+        );
+        const opp = createBattler(
+          guestSnap.name, guestSnap.speciesName,
+          guestSpecies?.image_key || 'adult_mamecchi',
+          guestSnap.strength, guestSnap.hungerPercent, guestSnap.happinessPercent,
+        );
+
+        setPlayerBattler(player);
+        setOpponentBattler(opp);
+        setWaitingForAccept(false);
+
+        // 待機チャンネルをクリーンアップ
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+        waitChannelRef.current = null;
+
+        setMode('realtime-battle');
+      }
+    });
+    waitChannelRef.current = channel;
+  };
+
+  // ===== リアルタイムフレンド対戦（ゲスト側 - 通知から遷移）=====
+  const startRealtimeBattleAsGuest = async (sessionId: string) => {
+    const supabase = createClient();
+
+    // セッション情報取得
+    const { data: sessions } = await supabase
+      .from('battle_sessions')
+      .select('*')
+      .eq('id', sessionId)
+      .limit(1);
+
+    if (!sessions || sessions.length === 0) {
+      setMessage('バトルセッションが見つかりません');
+      return;
+    }
+
+    const session = sessions[0];
+    const hostSnap = session.host_snapshot as unknown as ChallengerSnapshot;
+    const hostSpecies = allSpecies.find(s => s.name === hostSnap.speciesName);
+
+    const player = createBattler(
+      character.name || species.name,
+      species.name, species.image_key,
+      strength, character.hunger, character.happiness,
+    );
+    const opp = createBattler(
+      hostSnap.name, hostSnap.speciesName,
+      hostSpecies?.image_key || 'adult_mamecchi',
+      hostSnap.strength, hostSnap.hungerPercent, hostSnap.happinessPercent,
+    );
+
+    setPlayerBattler(player);
+    setOpponentBattler(opp);
+    setRealtimeSessionId(sessionId);
+    setIsHost(false);
+    setOpponentUserId(session.host_id);
+
+    // ゲスト参加を通知（ホストのバトルチャンネルへ）
+    const snapshot = createSnapshot(character, species);
+    const channel = supabase.channel(`battle:${sessionId}`, {
+      config: { broadcast: { self: true } },
+    });
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        channel.send({
+          type: 'broadcast',
+          event: 'battle_event',
+          payload: { type: 'guest_joined', guestSnapshot: snapshot },
+        });
+        // すぐには閉じない、RealtimeBattleScreen が別途チャンネルを開く
+        setTimeout(() => supabase.removeChannel(channel), 2000);
+      }
+    });
+
+    setMode('realtime-battle');
+  };
+
+  const cancelWaiting = () => {
+    if (waitChannelRef.current) {
+      const supabase = createClient();
+      supabase.removeChannel(waitChannelRef.current);
+      waitChannelRef.current = null;
+    }
+    if (realtimeSessionId) {
+      import('@/lib/realtime-battle-logic').then(m => m.cancelBattleSession(realtimeSessionId));
+    }
+    setWaitingForAccept(false);
+    setRealtimeSessionId(null);
   };
 
   const handleBattleEnd = async (won: boolean) => {
@@ -171,7 +277,6 @@ export default function BattlePage() {
   };
 
   const handleCoopEnd = async () => {
-    // 協力ゲームの報酬
     const supabase = createClient();
     const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
     await supabase
@@ -184,13 +289,30 @@ export default function BattlePage() {
     setMode('menu');
   };
 
-  // バトル中
+  // バトル中（CPU / チャレンジ対CPU）
   if (mode === 'battle' && playerBattler && opponentBattler) {
     return (
       <AnimatePresence>
         <BattleScreen
           player={playerBattler}
           opponent={opponentBattler}
+          onEnd={handleBattleEnd}
+        />
+      </AnimatePresence>
+    );
+  }
+
+  // リアルタイムバトル中
+  if (mode === 'realtime-battle' && playerBattler && opponentBattler && realtimeSessionId) {
+    return (
+      <AnimatePresence>
+        <RealtimeBattleScreen
+          sessionId={realtimeSessionId}
+          isHost={isHost}
+          player={playerBattler}
+          opponent={opponentBattler}
+          myUserId={myUserId}
+          opponentUserId={opponentUserId}
           onEnd={handleBattleEnd}
         />
       </AnimatePresence>
@@ -210,7 +332,10 @@ export default function BattlePage() {
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50">
       <header className="bg-gradient-to-r from-red-500/90 to-orange-400/90 backdrop-blur-md shadow-lg px-4 py-3 flex items-center">
         <button
-          onClick={() => mode === 'menu' ? router.push('/game') : setMode('menu')}
+          onClick={() => {
+            if (waitingForAccept) cancelWaiting();
+            mode === 'menu' ? router.push('/game') : setMode('menu');
+          }}
           className="text-white hover:text-white/80 mr-3 font-bold"
         >
           ← 戻る
@@ -238,7 +363,6 @@ export default function BattlePage() {
 
         {mode === 'menu' && (
           <div className="space-y-3">
-            {/* 対戦セクション */}
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1">対戦</p>
             <button
               onClick={() => setMode('difficulty')}
@@ -256,7 +380,7 @@ export default function BattlePage() {
               onClick={() => setMode('challenge')}
               className="w-full py-4 bg-gradient-to-r from-indigo-400 to-purple-400 text-white font-bold rounded-2xl shadow-lg text-base flex items-center justify-center gap-2 relative"
             >
-              📨 チャレンジバトル（非同期）
+              📨 チャレンジバトル
               {challengeCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow">
                   {challengeCount}
@@ -264,7 +388,6 @@ export default function BattlePage() {
               )}
             </button>
 
-            {/* 協力セクション */}
             <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mt-4">協力</p>
             <button
               onClick={() => setMode('coop')}
@@ -310,28 +433,52 @@ export default function BattlePage() {
               </p>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm">
-              <p className="text-sm text-gray-600 font-bold mb-2">フレンドコードで対戦</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={friendCode}
-                  onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-                  placeholder="コードを入力"
-                  maxLength={8}
-                  className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-center font-bold tracking-wider uppercase"
-                />
+            {!waitingForAccept ? (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-sm">
+                <p className="text-sm text-gray-600 font-bold mb-2">フレンドコードで対戦</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={friendCode}
+                    onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
+                    placeholder="コードを入力"
+                    maxLength={8}
+                    className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-center font-bold tracking-wider uppercase"
+                  />
+                  <button
+                    onClick={sendFriendBattleInvite}
+                    className="px-5 py-2.5 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition"
+                  >
+                    招待
+                  </button>
+                </div>
+                {friendSearchResult && (
+                  <p className="text-sm text-red-500 mt-2 text-center">{friendSearchResult}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  フレンドコードを入力して招待を送ると、相手のゲーム画面に通知が届きます
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm text-center">
+                <div className="text-4xl mb-3 animate-pulse">⚔️</div>
+                <p className="font-bold text-gray-800 mb-2">招待を送信しました</p>
+                <p className="text-sm text-gray-500 mb-4">
+                  相手が受諾するのを待っています...
+                </p>
+                <div className="flex justify-center gap-2 mb-3">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
                 <button
-                  onClick={searchFriend}
-                  className="px-5 py-2.5 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition"
+                  onClick={cancelWaiting}
+                  className="text-sm text-gray-400 underline"
                 >
-                  対戦
+                  キャンセル
                 </button>
               </div>
-              {friendSearchResult && (
-                <p className="text-sm text-red-500 mt-2 text-center">{friendSearchResult}</p>
-              )}
-            </div>
+            )}
           </div>
         )}
       </main>
@@ -342,6 +489,11 @@ export default function BattlePage() {
           <ChallengePanel
             onClose={() => { setMode('menu'); setChallengeCount(0); }}
             myCode={myCode}
+            onStartBattle={(playerB, opponentB) => {
+              setPlayerBattler(playerB);
+              setOpponentBattler(opponentB);
+              setMode('battle');
+            }}
           />
         )}
       </AnimatePresence>

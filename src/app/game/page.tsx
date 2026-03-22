@@ -15,6 +15,7 @@ import { AchievementPanel } from '@/components/game/AchievementPanel';
 import { EvolutionScreen } from '@/components/game/EvolutionScreen';
 import { MarriageScreen } from '@/components/game/MarriageScreen';
 import { GraveScreen } from '@/components/game/GraveScreen';
+import { BattleInviteNotification } from '@/components/game/BattleInviteNotification';
 import { getBackgroundPlaceholder } from '@/lib/character-images';
 import { walkAction } from '@/lib/game-logic';
 import { checkStatNotifications } from '@/lib/stat-notifications';
@@ -103,6 +104,7 @@ export default function GamePage() {
         onOpenMissions={() => setShowMissions(true)}
         onOpenAchievements={() => setShowAchievements(true)}
       />
+      <BattleInviteNotification />
       <MessageToast />
 
       <main className="flex-1 flex flex-col items-center max-w-lg mx-auto w-full px-4 pt-1 pb-60">

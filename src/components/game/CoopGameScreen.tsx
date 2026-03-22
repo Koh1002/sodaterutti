@@ -31,7 +31,7 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
-  const [tapEffects, setTapEffects] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [tapEffects, setTapEffects] = useState<{ id: number; x: number; y: number; isPenalty?: boolean }[]>([]);
 
   // ターン制関連
   const [activeRole, setActiveRole] = useState<'host' | 'guest'>('host');
@@ -235,15 +235,12 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
   }, [phase, isHost]);
 
   // タップ処理
+  const PENALTY_SCORE = 3; // 相手の番にタップした場合のペナルティ
+
   const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
     if (phase !== 'playing') return;
-    if (!isMyTurn) return; // 自分の番でない場合は無効
 
-    const newScore = myScoreRef.current + TAP_SCORE;
-    myScoreRef.current = newScore;
-    setMyScore(newScore);
-
-    // タップエフェクト
+    // タップエフェクト座標
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     let x: number, y: number;
     if ('touches' in e) {
@@ -253,8 +250,24 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
       x = e.clientX - rect.left;
       y = e.clientY - rect.top;
     }
+
+    let newScore: number;
+    const isPenalty = !isMyTurn;
+
+    if (isPenalty) {
+      // 相手の番にタップ → 減点（マイナスもあり）
+      newScore = myScoreRef.current - PENALTY_SCORE;
+    } else {
+      // 自分の番 → 加点
+      newScore = myScoreRef.current + TAP_SCORE;
+    }
+
+    myScoreRef.current = newScore;
+    setMyScore(newScore);
+
+    // タップエフェクト
     const id = ++effectIdRef.current;
-    setTapEffects(prev => [...prev, { id, x, y }]);
+    setTapEffects(prev => [...prev, { id, x, y, isPenalty }]);
     setTimeout(() => setTapEffects(prev => prev.filter(e => e.id !== id)), 500);
 
     // ブロードキャスト
@@ -365,9 +378,9 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
             emoji="🧹"
             instructions={[
               '2人で協力してお掃除しよう！',
-              '自分の番のときだけタップが有効だよ',
+              '自分の番のときにタップで+1点！',
+              '相手の番にタップすると-3点！我慢！',
               '番はランダムに切り替わるから注意！',
-              '画面が光ったら番が交代の合図',
               `${GAME_DURATION}秒で合計${targetScore}回を目指そう！`,
             ]}
             onStart={handleReady}
@@ -417,7 +430,7 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
             <div className="flex gap-8 mb-2">
               <div className={`text-center px-4 py-2 rounded-xl transition-all ${isMyTurn ? 'bg-green-100 ring-2 ring-green-400' : ''}`}>
                 <p className="text-xs text-gray-500">あなた</p>
-                <p className="text-2xl font-bold text-blue-600">{myScore}</p>
+                <p className={`text-2xl font-bold ${myScore < 0 ? 'text-red-500' : 'text-blue-600'}`}>{myScore}</p>
               </div>
               <div className={`text-center px-4 py-2 rounded-xl transition-all ${!isMyTurn ? 'bg-green-100 ring-2 ring-green-400' : ''}`}>
                 <p className="text-xs text-gray-500">パートナー</p>
@@ -429,31 +442,31 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
             <div
               onClick={handleTap}
               onTouchStart={handleTap}
-              className={`relative w-full aspect-square max-w-xs rounded-3xl border-4 border-dashed flex items-center justify-center cursor-pointer transition select-none overflow-hidden ${
+              className={`relative w-full aspect-square max-w-xs rounded-3xl border-4 border-dashed flex items-center justify-center cursor-pointer active:scale-95 transition select-none overflow-hidden ${
                 isMyTurn
-                  ? 'bg-white/60 border-green-400 active:scale-95'
-                  : 'bg-gray-200/60 border-gray-300 opacity-60 cursor-not-allowed'
+                  ? 'bg-white/60 border-green-400'
+                  : 'bg-red-50/60 border-red-300'
               }`}
             >
               <div className="text-center">
-                <p className="text-7xl">{isMyTurn ? '🧹' : '🚫'}</p>
-                <p className={`text-sm mt-2 font-bold ${isMyTurn ? 'text-green-600' : 'text-gray-400'}`}>
-                  {isMyTurn ? 'タップでお掃除！' : 'パートナーの番です'}
+                <p className="text-7xl">{isMyTurn ? '🧹' : '⚠️'}</p>
+                <p className={`text-sm mt-2 font-bold ${isMyTurn ? 'text-green-600' : 'text-red-400'}`}>
+                  {isMyTurn ? 'タップでお掃除！' : 'パートナーの番！タップすると-3'}
                 </p>
               </div>
               {/* タップエフェクト */}
               <AnimatePresence>
-                {tapEffects.map(({ id, x, y }) => (
+                {tapEffects.map(({ id, x, y, isPenalty }) => (
                   <motion.span
                     key={id}
                     initial={{ opacity: 1, scale: 0.5, x: x - 15, y: y - 15 }}
                     animate={{ opacity: 0, scale: 1.5, y: y - 50 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="absolute text-2xl pointer-events-none"
+                    className={`absolute text-2xl pointer-events-none ${isPenalty ? 'text-red-500' : ''}`}
                     style={{ left: 0, top: 0 }}
                   >
-                    ✨
+                    {isPenalty ? '-3' : '✨'}
                   </motion.span>
                 ))}
               </AnimatePresence>
@@ -495,11 +508,11 @@ export function CoopGameScreen({ onClose }: CoopGameScreenProps) {
               <div className="flex justify-center gap-8">
                 <div className="text-center">
                   <p className="text-xs text-gray-500">あなた</p>
-                  <p className="text-xl font-bold text-blue-600">{myScore}</p>
+                  <p className={`text-xl font-bold ${myScore < 0 ? 'text-red-500' : 'text-blue-600'}`}>{myScore}</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xs text-gray-500">パートナー</p>
-                  <p className="text-xl font-bold text-purple-600">{partnerScore}</p>
+                  <p className={`text-xl font-bold ${partnerScore < 0 ? 'text-red-500' : 'text-purple-600'}`}>{partnerScore}</p>
                 </div>
               </div>
               {isSuccess && (

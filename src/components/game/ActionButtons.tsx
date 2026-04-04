@@ -145,7 +145,7 @@ export function ActionButtons({ onWalk }: ActionButtonsProps) {
       icon: 'clean',
       label: 'おそうじ',
       onClick: () => { closeAll(); clean(); },
-      disabled: character.is_sleeping || character.cleanliness >= 100,
+      disabled: character.is_sleeping || (character.cleanliness >= 100 && character.poop_count === 0),
       active: false,
     },
     {

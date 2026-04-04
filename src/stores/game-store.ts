@@ -199,10 +199,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const gender = Math.random() < 0.5 ? 'male' : 'female';
-    const babySpeciesId = gender === 'male'
-      ? '00000000-0000-0000-0000-000000000001'
-      : '00000000-0000-0000-0000-000000000002';
+    // ベビー4体からランダムに選出
+    const babySpeciesIds = [
+      '00000000-0000-0000-0000-000000000001', // ベビーたまっち♂
+      '00000000-0000-0000-0000-000000000002', // ベビーたまっち♀
+      '00000000-0000-0000-0000-000000000003', // ベビーふわっち
+      '00000000-0000-0000-0000-000000000004', // ベビーきらっち
+    ];
+    const babySpeciesId = babySpeciesIds[Math.floor(Math.random() * babySpeciesIds.length)];
 
     // 進化レコードを除外して、実際に世代を終えた（結婚・死亡）レコードから親を特定する
     const { data: history } = await supabase

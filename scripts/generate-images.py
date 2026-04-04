@@ -79,10 +79,12 @@ def generate_single_image(
     model: str,
     prompt_data: dict,
     output_dir: Path,
-) -> bool:
+    total_count: int = 0,
+    skip_existing: bool = True,
+) -> bool | None:
     """
     1枚の画像を生成して保存する。
-    成功時 True、失敗時 False を返す。
+    成功時 True、失敗時 False、スキップ時 None を返す。
     """
     prompt_id = prompt_data["id"]
     name = prompt_data["name"]
@@ -91,8 +93,16 @@ def generate_single_image(
     target_size = prompt_data["size"]
 
     output_path = output_dir / filename
+
+    # 既存ファイルが存在する場合はスキップ
+    if skip_existing and output_path.exists():
+        file_size_kb = output_path.stat().st_size / 1024
+        print(f"  [SKIP] {name} ({filename}) - 既に存在 ({file_size_kb:.1f} KB)")
+        return None
+
+    total_label = total_count if total_count > 0 else "?"
     print(f"\n{'='*60}")
-    print(f"[{prompt_id:02d}/67] {name}")
+    print(f"[{prompt_id:02d}/{total_label}] {name}")
     print(f"  -> {output_path}")
     print(f"  Size: {target_size}")
     print(f"  Prompt: {prompt_text[:80]}...")
@@ -187,6 +197,17 @@ def main():
         help="特定カテゴリのみ生成",
     )
     parser.add_argument(
+        "--skip-existing",
+        action="store_true",
+        default=True,
+        help="既にファイルが存在する画像をスキップ (default: True)",
+    )
+    parser.add_argument(
+        "--no-skip-existing",
+        action="store_true",
+        help="既存ファイルを上書きして再生成",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="実際には生成せずプロンプトを表示",
@@ -233,51 +254,79 @@ def main():
         if skipped:
             print(f"[RESUME] {len(skipped)}枚は生成済みのためスキップ")
 
+    # --- skip-existing設定 ---
+    skip_existing = args.skip_existing and not args.no_skip_existing
+
+    # --- 既存ファイルチェック ---
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if skip_existing:
+        existing_files = [p for p in prompts if (output_dir / p["filename"]).exists()]
+        new_files = [p for p in prompts if not (output_dir / p["filename"]).exists()]
+    else:
+        existing_files = []
+        new_files = prompts
+
     # --- サマリ表示 ---
+    total_prompts = len(all_prompts)
     print("=" * 60)
     print("  たまごっちゲーム 画像一括生成")
     print("=" * 60)
     print(f"  モデル     : {args.model}")
     print(f"  出力先     : {args.output_dir}")
     print(f"  リクエスト間隔: {args.delay}秒")
-    print(f"  生成対象   : {len(prompts)}枚")
-    print(f"  生成済み   : {len(progress.get('completed', []))}枚")
-    total_time_min = (len(prompts) * args.delay) / 60
+    print(f"  全プロンプト : {total_prompts}枚")
+    print(f"  対象(フィルタ後): {len(prompts)}枚")
+    if skip_existing:
+        print(f"  既存スキップ : {len(existing_files)}枚")
+        print(f"  新規生成対象 : {len(new_files)}枚")
+    print(f"  生成済み(進捗): {len(progress.get('completed', []))}枚")
+    total_time_min = (len(new_files) * args.delay) / 60
     print(f"  推定時間   : 約{total_time_min:.1f}分")
     print("=" * 60)
 
-    if not prompts:
-        print("\n全ての画像が生成済みです！")
+    if not new_files:
+        print("\n全ての画像が生成済みです！新しいキャラを追加するには prompts.json を編集してください。")
         return
 
     # --- Dry Run ---
     if args.dry_run:
-        print("\n[DRY RUN] 以下のプロンプトで生成します:\n")
-        for p in prompts:
+        if existing_files:
+            print(f"\n[SKIP] 以下の{len(existing_files)}枚は既に存在するためスキップ:")
+            for p in existing_files:
+                size_kb = (output_dir / p["filename"]).stat().st_size / 1024
+                print(f"  #{p['id']:02d} {p['name']} ({p['filename']}) [{size_kb:.1f} KB]")
+
+        print(f"\n[DRY RUN] 以下の{len(new_files)}枚を新規生成します:\n")
+        for p in new_files:
             print(f"  #{p['id']:02d} {p['name']} -> {p['filename']}")
             print(f"       {p['prompt'][:100]}...")
             print()
-        print(f"合計: {len(prompts)}枚")
+        print(f"新規生成: {len(new_files)}枚 / スキップ: {len(existing_files)}枚")
         return
 
     # --- Gemini Client初期化 ---
     client = genai.Client(api_key=api_key)
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # --- 生成ループ ---
+    # --- 生成ループ (新規のみ) ---
     success_count = 0
     fail_count = 0
+    skip_count = len(existing_files)
 
-    for i, prompt_data in enumerate(prompts):
-        success = generate_single_image(client, args.model, prompt_data, output_dir)
+    for i, prompt_data in enumerate(new_files):
+        result = generate_single_image(
+            client, args.model, prompt_data, output_dir,
+            total_count=total_prompts, skip_existing=skip_existing,
+        )
 
-        if success:
+        if result is True:
             success_count += 1
             progress["completed"].append(prompt_data["id"])
-            # 失敗リストから除去
             if prompt_data["id"] in progress.get("failed", []):
                 progress["failed"].remove(prompt_data["id"])
+        elif result is None:
+            skip_count += 1
         else:
             fail_count += 1
             if prompt_data["id"] not in progress.get("failed", []):
@@ -286,8 +335,8 @@ def main():
         # 進捗を都度保存（中断に備える）
         save_progress(progress)
 
-        # 最後のリクエスト以外はディレイを入れる
-        if i < len(prompts) - 1:
+        # 最後のリクエスト以外はディレイを入れる（スキップ時は不要）
+        if result is not None and i < len(new_files) - 1:
             print(f"  [{args.delay}秒待機中...]")
             time.sleep(args.delay)
 
@@ -295,9 +344,10 @@ def main():
     print("\n" + "=" * 60)
     print("  生成完了レポート")
     print("=" * 60)
-    print(f"  成功: {success_count}枚")
-    print(f"  失敗: {fail_count}枚")
-    print(f"  累計完了: {len(progress['completed'])}/67枚")
+    print(f"  新規成功: {success_count}枚")
+    print(f"  スキップ: {skip_count}枚")
+    print(f"  失敗    : {fail_count}枚")
+    print(f"  累計完了: {len(progress['completed'])}/{total_prompts}枚")
 
     if progress.get("failed"):
         print(f"\n  失敗したID: {progress['failed']}")

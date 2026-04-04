@@ -534,5 +534,167 @@
     "filename": "main_visual.png",
     "size": "1200x630",
     "prompt": "A colorful cheerful main visual for a cute creature raising game website, featuring 5 to 6 cute chibi round creature characters of different colors including pink, blue, green, yellow, and purple grouped together happily, surrounded by hearts, stars, and sparkles, large cute egg in the center background, text space at the top for game title, pastel rainbow gradient background, kawaii cute game aesthetic, vibrant and inviting illustration, flat design style."
+  },
+
+  {
+    "id": 68,
+    "name": "ベビーふわっち",
+    "category": "character",
+    "filename": "baby_fuwacchi.png",
+    "size": "256x256",
+    "prompt": "A cute round fluffy baby creature character, chibi style, simple design, small round cotton-like body with soft fuzzy texture, big sleepy gentle eyes, cream white body color with soft pink cheeks, happy calm expression, tiny stubby arms, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 69,
+    "name": "ベビーきらっち",
+    "category": "character",
+    "filename": "baby_kiracchi.png",
+    "size": "256x256",
+    "prompt": "A cute round sparkling baby creature character, chibi style, simple design, small round body with tiny sparkle effects around it, big bright shiny eyes with star-shaped pupils, pale golden yellow body color, excited happy expression, tiny arms reaching up, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 70,
+    "name": "ほしたまっち",
+    "category": "character",
+    "filename": "kids_hoshitamacchi.png",
+    "size": "256x256",
+    "prompt": "A cute small star-themed creature character, toddler stage, chibi style, round body with a small star-shaped antenna on top, golden yellow body color with tiny star patterns, cheerful sparkling expression, small arms and feet, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 71,
+    "name": "はなたまっち",
+    "category": "character",
+    "filename": "kids_hanatamacchi.png",
+    "size": "256x256",
+    "prompt": "A cute small flower-themed creature character, toddler stage, chibi style, round body with small flower petals growing from head like a hat, pastel pink body color with green leaf hands, gentle sweet expression, small round feet, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 72,
+    "name": "ゆきたまっち",
+    "category": "character",
+    "filename": "kids_yukitamacchi.png",
+    "size": "256x256",
+    "prompt": "A cute small snow-themed creature character, toddler stage, chibi style, round snowball-like body, pure white body color with light blue frost accents, calm serene expression, tiny ice crystal on forehead, small mittened hands, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 73,
+    "name": "ひなたまっち",
+    "category": "character",
+    "filename": "kids_hinatamacchi.png",
+    "size": "256x256",
+    "prompt": "A cute small sun-themed creature character, toddler stage, chibi style, round body with small sun-ray protrusions around head, warm orange body color, bright energetic expression, rosy warm cheeks, tiny bouncy feet, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 74,
+    "name": "ヤングほなっち",
+    "category": "character",
+    "filename": "young_honacchi.png",
+    "size": "256x256",
+    "prompt": "A cute medium-sized flower-themed creature character, teenager stage, chibi style, round body slightly taller, blooming flower crown on head with multiple colorful petals, pastel pink and green body color, graceful kind expression, leaf-shaped arms, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 75,
+    "name": "ヤングゆきっち",
+    "category": "character",
+    "filename": "young_yukicchi.png",
+    "size": "256x256",
+    "prompt": "A cute medium-sized snow-themed creature character, teenager stage, chibi style, elegant icy body with snowflake patterns, white and ice blue body color, cool graceful expression, small ice crystal crown, flowing frost trail, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 76,
+    "name": "ヤングひなっち",
+    "category": "character",
+    "filename": "young_hinacchi.png",
+    "size": "256x256",
+    "prompt": "A cute medium-sized sun-themed creature character, teenager stage, chibi style, round warm body with sun-ray hair spikes, bright orange and yellow gradient body color, confident energetic expression, flame-like tail, warm glow effect around, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 77,
+    "name": "ヤングきらっち",
+    "category": "character",
+    "filename": "young_kiracchi.png",
+    "size": "256x256",
+    "prompt": "A cute medium-sized sparkle-themed creature character, teenager stage, chibi style, round crystalline body with prism-like reflections, pale golden and iridescent body color, dazzling cheerful expression, small diamond-shaped ears, sparkle trail effects, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+
+  {
+    "id": 78,
+    "name": "ベビーふわっち 表情差分",
+    "category": "expression",
+    "filename": "baby_fuwacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round fluffy cream white baby creature with soft fuzzy texture, big sleepy gentle eyes, pink cheeks: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 79,
+    "name": "ベビーきらっち 表情差分",
+    "category": "expression",
+    "filename": "baby_kiracchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round sparkling pale golden yellow baby creature with star-shaped pupils, tiny sparkle effects: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 80,
+    "name": "ほしたまっち 表情差分",
+    "category": "expression",
+    "filename": "kids_hoshitamacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round golden yellow creature with star-shaped antenna, tiny star patterns on body: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 81,
+    "name": "はなたまっち 表情差分",
+    "category": "expression",
+    "filename": "kids_hanatamacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round pastel pink creature with flower petals on head, green leaf hands: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 82,
+    "name": "ゆきたまっち 表情差分",
+    "category": "expression",
+    "filename": "kids_yukitamacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round pure white snowball-like creature with light blue frost accents, ice crystal on forehead: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 83,
+    "name": "ひなたまっち 表情差分",
+    "category": "expression",
+    "filename": "kids_hinatamacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute round warm orange sun-themed creature with sun-ray protrusions, rosy cheeks: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 84,
+    "name": "ヤングほなっち 表情差分",
+    "category": "expression",
+    "filename": "young_honacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute medium flower-themed creature with blooming flower crown, pastel pink and green body, leaf-shaped arms: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 85,
+    "name": "ヤングゆきっち 表情差分",
+    "category": "expression",
+    "filename": "young_yukicchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute medium icy creature with snowflake patterns, white and ice blue body, ice crystal crown: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 86,
+    "name": "ヤングひなっち 表情差分",
+    "category": "expression",
+    "filename": "young_hinacchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute medium sun-themed creature with sun-ray hair spikes, orange and yellow gradient body, flame-like tail: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
+  },
+  {
+    "id": 87,
+    "name": "ヤングきらっち 表情差分",
+    "category": "expression",
+    "filename": "young_kiracchi_expressions.png",
+    "size": "512x512",
+    "prompt": "A 2x2 grid sprite sheet of a cute medium crystalline sparkle creature with prism reflections, pale golden iridescent body, diamond-shaped ears: Top-left: eating happily with open mouth holding food, Top-right: playing excitedly and jumping with sparkle effects, Bottom-left: sleeping peacefully with closed eyes and zzz text, Bottom-right: feeling unwell with pale color and sweat drop and dizzy spiral eyes. Same consistent character design across all four panels, smooth clean vector illustration style, white background, transparent PNG, kawaii cute game aesthetic."
   }
 ]

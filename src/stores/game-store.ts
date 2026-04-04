@@ -239,7 +239,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         prevBattleBonus = typeof prevGene.battleBonus === 'number' ? prevGene.battleBonus : 0;
       }
       gene = {
-        bodyColor: gender === 'male' ? 'blue' : 'pink',
+        bodyColor: ['blue', 'pink', 'cream', 'gold'][Math.floor(Math.random() * 4)],
         eyeType: 'round',
         personality: 'neutral',
         // 死亡後でも世代ボーナスを引き継ぐ（+3はなし、維持のみ）

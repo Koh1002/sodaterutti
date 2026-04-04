@@ -200,13 +200,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!user) return;
 
     // ベビー4体からランダムに選出
-    const babySpeciesIds = [
-      '00000000-0000-0000-0000-000000000001', // ベビーたまっち♂
-      '00000000-0000-0000-0000-000000000002', // ベビーたまっち♀
-      '00000000-0000-0000-0000-000000000003', // ベビーふわっち
-      '00000000-0000-0000-0000-000000000004', // ベビーきらっち
+    const babyOptions: { id: string; gender: 'male' | 'female' }[] = [
+      { id: '00000000-0000-0000-0000-000000000001', gender: 'male' },   // ベビーたまっち♂
+      { id: '00000000-0000-0000-0000-000000000002', gender: 'female' }, // ベビーたまっち♀
+      { id: '00000000-0000-0000-0000-000000000003', gender: 'male' },   // ベビーふわっち
+      { id: '00000000-0000-0000-0000-000000000004', gender: 'female' }, // ベビーきらっち
     ];
-    const babySpeciesId = babySpeciesIds[Math.floor(Math.random() * babySpeciesIds.length)];
+    const selectedBaby = babyOptions[Math.floor(Math.random() * babyOptions.length)];
+    const babySpeciesId = selectedBaby.id;
+    const babyGender = selectedBaby.gender;
 
     // 進化レコードを除外して、実際に世代を終えた（結婚・死亡）レコードから親を特定する
     const { data: history } = await supabase
@@ -257,7 +259,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         user_id: user.id,
         name: name || '',
         species_id: babySpeciesId,
-        gender: gender as 'male' | 'female',
+        gender: babyGender,
         generation,
         gene,
         parent_character_id: parentCharId,

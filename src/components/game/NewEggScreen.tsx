@@ -106,6 +106,13 @@ export function NewEggScreen() {
           onChange={(e) => setName(e.target.value)}
           maxLength={30}
           placeholder="名前を入力（省略可）"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          name="pet-nickname"
+          id="pet-nickname"
+          data-form-type="other"
           className="w-full px-4 py-3 border border-base-200 rounded-2xl focus:ring-2 focus:ring-muted-blue/30 focus:border-muted-blue/40 outline-none text-center bg-white/40 backdrop-blur-sm text-text-primary placeholder:text-text-tertiary tracking-relaxed text-sm"
         />
         <button

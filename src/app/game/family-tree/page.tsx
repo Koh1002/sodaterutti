@@ -116,18 +116,18 @@ export default function FamilyTreePage() {
         ) : (
           <div className="relative">
             {/* 縦線 */}
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-green-200" />
+            <div className="absolute left-7 top-0 bottom-0 w-0.5 bg-green-200" />
 
             {/* 過去のキャラクター */}
             {history.map((h) => (
               <div key={h.id} className="relative flex items-start gap-4 mb-6">
-                <div className="relative z-10 w-12 h-12 bg-white border-2 border-green-300 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="relative z-10 w-14 h-14 bg-white border-2 border-green-300 rounded-full shrink-0 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={h.imageKey ? getCharacterImagePath(h.imageKey) : getPlaceholderSvg(h.gender === 'male' ? 'baby_boy' : 'baby_girl', 48)}
+                    src={h.imageKey ? getCharacterImagePath(h.imageKey) : getPlaceholderSvg(h.gender === 'male' ? 'baby_boy' : 'baby_girl', 56)}
                     alt={h.speciesName}
-                    className="w-10 h-10 object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(h.imageKey || 'egg_normal', 48); }}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(h.imageKey || 'egg_normal', 56); }}
                   />
                 </div>
                 <div className="bg-white rounded-xl p-3 shadow-sm flex-1 mt-1">
@@ -146,13 +146,13 @@ export default function FamilyTreePage() {
             {/* 現在のキャラクター */}
             {currentChar && (
               <div className="relative flex items-start gap-4">
-                <div className="relative z-10 w-12 h-12 bg-purple-100 border-2 border-purple-400 rounded-full flex items-center justify-center shrink-0 overflow-hidden animate-pulse">
+                <div className="relative z-10 w-14 h-14 bg-purple-100 border-2 border-purple-400 rounded-full shrink-0 overflow-hidden animate-pulse">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={currentChar.imageKey ? getCharacterImagePath(currentChar.imageKey) : getPlaceholderSvg('egg_normal', 48)}
+                    src={currentChar.imageKey ? getCharacterImagePath(currentChar.imageKey) : getPlaceholderSvg('egg_normal', 56)}
                     alt={currentChar.speciesName}
-                    className="w-10 h-10 object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(currentChar.imageKey || 'egg_normal', 48); }}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).src = getPlaceholderSvg(currentChar.imageKey || 'egg_normal', 56); }}
                   />
                 </div>
                 <div className="bg-purple-50 rounded-xl p-3 shadow-sm flex-1 mt-1 border border-purple-200">
